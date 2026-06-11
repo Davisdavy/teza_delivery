@@ -1,0 +1,31 @@
+spring:
+  application:
+    name: teza
+
+  datasource:
+    url: ${TEZA_DB_URL:jdbc:postgresql://localhost:5432/teza}
+    username: ${TEZA_DB_USERNAME:teza}
+    password: ${TEZA_DB_PASSWORD:teza}
+
+  jpa:
+    hibernate:
+      # Flyway owns the schema; Hibernate only validates the mapping against it.
+      ddl-auto: validate
+    open-in-view: false
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+teza:
+  security:
+    jwt:
+      # Override in every real environment. Must be >= 32 bytes for HS256.
+      secret: ${TEZA_JWT_SECRET:change-me-this-is-a-dev-only-secret-please-rotate}
+      issuer: teza
+      access-token-ttl: 15m
+      refresh-token-ttl: 7d
+    bootstrap-admin:
+      enabled: ${TEZA_ADMIN_ENABLED:true}
+      email: ${TEZA_ADMIN_EMAIL:admin@teza.local}
+      password: ${TEZA_ADMIN_PASSWORD:}
