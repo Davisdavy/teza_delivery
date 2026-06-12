@@ -22,6 +22,7 @@ import com.wafula.teza.shared.domain.Role;
 import com.wafula.teza.shared.exception.ApiException;
 import com.wafula.teza.user.application.UserAccount;
 import com.wafula.teza.user.application.UserAccountService;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -138,5 +139,17 @@ class RiderServiceTest {
         listener.onUserRoleChanged(event);
 
         verify(riderProfileRepository).save(any(RiderProfile.class));
+    }
+
+    @Test
+    void testGetAllProfiles() {
+        RiderProfile profile1 = RiderProfile.builder().id(UUID.randomUUID()).userId(UUID.randomUUID()).build();
+        RiderProfile profile2 = RiderProfile.builder().id(UUID.randomUUID()).userId(UUID.randomUUID()).build();
+        when(riderProfileRepository.findAll()).thenReturn(List.of(profile1, profile2));
+
+        List<RiderProfileResponse> result = riderService.getAllProfiles();
+
+        assertEquals(2, result.size());
+        verify(riderProfileRepository).findAll();
     }
 }

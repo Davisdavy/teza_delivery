@@ -9,6 +9,7 @@ import com.wafula.teza.shared.domain.Role;
 import com.wafula.teza.shared.exception.ApiException;
 import com.wafula.teza.user.application.UserAccount;
 import com.wafula.teza.user.application.UserAccountService;
+import java.util.List;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -102,5 +103,13 @@ public class MerchantServiceImpl implements MerchantService {
         }
 
         merchantRepository.delete(merchant);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<MerchantResponse> getAllProfiles() {
+        return merchantRepository.findAll().stream()
+                .map(MerchantMapper::toResponse)
+                .toList();
     }
 }

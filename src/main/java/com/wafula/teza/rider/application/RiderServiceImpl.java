@@ -181,4 +181,12 @@ public class RiderServiceImpl implements RiderService {
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Rider location not found"));
         return RiderMapper.toLocationResponse(location);
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<RiderProfileResponse> getAllProfiles() {
+        return riderProfileRepository.findAll().stream()
+                .map(RiderMapper::toProfileResponse)
+                .toList();
+    }
 }

@@ -3,6 +3,7 @@ package com.wafula.teza.merchant.application;
 import com.wafula.teza.merchant.api.dto.MerchantCreateRequest;
 import com.wafula.teza.merchant.api.dto.MerchantResponse;
 import com.wafula.teza.merchant.api.dto.MerchantUpdateRequest;
+import java.util.List;
 import java.util.UUID;
 
 public interface MerchantService {
@@ -16,4 +17,6 @@ public interface MerchantService {
     MerchantResponse updateProfile(UUID userId, MerchantUpdateRequest request);
 
     void deleteProfile(UUID profileId, UUID currentUserId, boolean isAdmin);
+
+    List<MerchantResponse> getAllProfiles();
 }

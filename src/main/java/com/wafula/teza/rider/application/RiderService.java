@@ -30,4 +30,6 @@ public interface RiderService {
     List<RiderProfileResponse> findAvailableRiders();
 
     RiderLocationResponse getLocationByProfileId(UUID profileId);
+
+    List<RiderProfileResponse> getAllProfiles();
 }

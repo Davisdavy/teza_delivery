@@ -9,6 +9,7 @@ import com.wafula.teza.rider.api.dto.RiderOnboardingUpdateRequest;
 import com.wafula.teza.rider.application.RiderService;
 import org.springframework.security.access.prepost.PreAuthorize;
 import jakarta.validation.Valid;
+import java.util.List;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
@@ -57,6 +58,12 @@ public class RiderController {
             Authentication authentication) {
         boolean isAdmin = hasAdminRole(authentication);
         return riderService.getProfileById(id, currentUserId, isAdmin);
+    }
+
+    @GetMapping("/profiles")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'SUPPORT_ADMIN')")
+    public List<RiderProfileResponse> getAllProfiles() {
+        return riderService.getAllProfiles();
     }
 
     @PutMapping("/profile")

@@ -39,4 +39,6 @@ public interface DeliveryService {
     List<DeliveryStatusHistoryResponse> getStatusHistory(UUID deliveryId, UUID currentUserId, boolean isAdmin);
 
     List<RankedRider> findMatchingRiders(UUID deliveryId, UUID currentUserId, boolean isAdmin);
+
+    List<DeliveryResponse> getAllDeliveries();
 }

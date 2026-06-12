@@ -4,7 +4,9 @@ import com.wafula.teza.merchant.api.dto.MerchantCreateRequest;
 import com.wafula.teza.merchant.api.dto.MerchantResponse;
 import com.wafula.teza.merchant.api.dto.MerchantUpdateRequest;
 import com.wafula.teza.merchant.application.MerchantService;
+import org.springframework.security.access.prepost.PreAuthorize;
 import jakarta.validation.Valid;
+import java.util.List;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
@@ -53,6 +55,12 @@ public class MerchantController {
             Authentication authentication) {
         boolean isAdmin = hasAdminRole(authentication);
         return merchantService.getProfileById(id, currentUserId, isAdmin);
+    }
+
+    @GetMapping("/profiles")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'SUPPORT_ADMIN')")
+    public List<MerchantResponse> getAllProfiles() {
+        return merchantService.getAllProfiles();
     }
 
     @PutMapping("/profile")

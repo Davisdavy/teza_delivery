@@ -86,10 +86,10 @@ public class DeliveryServiceImpl implements DeliveryService {
         if (user.role() == Role.MERCHANT) {
             MerchantResponse merchant = merchantService.getProfileByUserId(userId);
             merchantId = merchant.id();
-        } else if (user.role() == Role.CUSTOMER) {
+        } else if (user.role() == Role.CUSTOMER || user.role() == Role.SUPER_ADMIN || user.role() == Role.SUPPORT_ADMIN) {
             customerId = userId;
         } else {
-            throw new ApiException(HttpStatus.FORBIDDEN, "Only customers and merchants can place deliveries");
+            throw new ApiException(HttpStatus.FORBIDDEN, "Only customers, merchants, and admins can place deliveries");
         }
 
         Delivery delivery = Delivery.builder()
@@ -643,5 +643,13 @@ public class DeliveryServiceImpl implements DeliveryService {
         } else {
             matchingRidersCache.remove(delivery.getId());
         }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<DeliveryResponse> getAllDeliveries() {
+        return deliveryRepository.findAll().stream()
+                .map(DeliveryMapper::toResponse)
+                .toList();
     }
 }

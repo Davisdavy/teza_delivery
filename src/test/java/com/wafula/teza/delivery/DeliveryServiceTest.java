@@ -178,9 +178,9 @@ class DeliveryServiceTest {
     }
 
     @Test
-    void testCreateDeliveryAsAdminOrRiderThrowsForbidden() {
-        UUID adminId = UUID.randomUUID();
-        UserAccount adminAccount = new UserAccount(adminId, "admin@test.com", "hash", Role.SUPER_ADMIN, true);
+    void testCreateDeliveryAsRiderThrowsForbidden() {
+        UUID riderId = UUID.randomUUID();
+        UserAccount riderAccount = new UserAccount(riderId, "rider@test.com", "hash", Role.RIDER, true);
         
         DeliveryCreateRequest request = new DeliveryCreateRequest(
                 "Pickup 123", -1.2833, 36.8167,
@@ -188,14 +188,37 @@ class DeliveryServiceTest {
                 BigDecimal.valueOf(150.00)
         );
 
-        when(userAccountService.findById(adminId)).thenReturn(Optional.of(adminAccount));
+        when(userAccountService.findById(riderId)).thenReturn(Optional.of(riderAccount));
 
         ApiException exception = assertThrows(ApiException.class, () -> 
-            deliveryService.createDelivery(adminId, request)
+            deliveryService.createDelivery(riderId, request)
         );
 
         assertEquals(HttpStatus.FORBIDDEN, exception.getStatus());
-        assertEquals("Only customers and merchants can place deliveries", exception.getMessage());
+        assertEquals("Only customers, merchants, and admins can place deliveries", exception.getMessage());
+    }
+
+    @Test
+    void testCreateDeliveryAsAdminSuccess() {
+        UUID adminId = UUID.randomUUID();
+        UserAccount adminAccount = new UserAccount(adminId, "admin@test.com", "hash", Role.SUPER_ADMIN, true);
+
+        DeliveryCreateRequest request = new DeliveryCreateRequest(
+                "Pickup 123", -1.2833, 36.8167,
+                "Dropoff 456", -1.2933, 36.8267,
+                BigDecimal.valueOf(150.00)
+        );
+
+        when(userAccountService.findById(adminId)).thenReturn(Optional.of(adminAccount));
+        when(deliveryRepository.save(any(Delivery.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        DeliveryResponse response = deliveryService.createDelivery(adminId, request);
+
+        assertEquals("Pickup 123", response.pickupAddress());
+        assertEquals(adminId, response.customerId());
+        assertNull(response.merchantId());
+        assertEquals(DeliveryStatus.PENDING, response.status());
+        verify(deliveryRepository).save(any(Delivery.class));
     }
 
     @Test
@@ -610,5 +633,17 @@ class DeliveryServiceTest {
         assertNotNull(response);
         assertEquals(DeliveryStatus.DELIVERED, response.status());
         verify(riderService).updateProfile(riderUserId, new com.wafula.teza.rider.api.dto.RiderProfileUpdateRequest(null, null, null, true));
+    }
+
+    @Test
+    void testGetAllDeliveries() {
+        Delivery delivery1 = Delivery.builder().id(UUID.randomUUID()).pickupAddress("A").dropoffAddress("B").deliveryFee(BigDecimal.TEN).build();
+        Delivery delivery2 = Delivery.builder().id(UUID.randomUUID()).pickupAddress("C").dropoffAddress("D").deliveryFee(BigDecimal.TEN).build();
+        when(deliveryRepository.findAll()).thenReturn(List.of(delivery1, delivery2));
+
+        List<DeliveryResponse> result = deliveryService.getAllDeliveries();
+
+        assertEquals(2, result.size());
+        verify(deliveryRepository).findAll();
     }
 }
