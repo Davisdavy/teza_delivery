@@ -68,7 +68,7 @@ public class MerchantController {
             @PathVariable UUID id,
             @AuthenticationPrincipal UUID currentUserId,
             Authentication authentication) {
-        boolean isAdmin = hasAdminRole(authentication);
+        boolean isAdmin = hasSuperAdminRole(authentication);
         merchantService.deleteProfile(id, currentUserId, isAdmin);
     }
 
@@ -77,6 +77,16 @@ public class MerchantController {
             return false;
         }
         return authentication.getAuthorities().stream()
-                .anyMatch(grantedAuthority -> grantedAuthority.getAuthority().equals("ROLE_ADMIN"));
+                .anyMatch(grantedAuthority ->
+                    grantedAuthority.getAuthority().equals("ROLE_SUPER_ADMIN") ||
+                    grantedAuthority.getAuthority().equals("ROLE_SUPPORT_ADMIN"));
+    }
+
+    private boolean hasSuperAdminRole(Authentication authentication) {
+        if (authentication == null) {
+            return false;
+        }
+        return authentication.getAuthorities().stream()
+                .anyMatch(grantedAuthority -> grantedAuthority.getAuthority().equals("ROLE_SUPER_ADMIN"));
     }
 }

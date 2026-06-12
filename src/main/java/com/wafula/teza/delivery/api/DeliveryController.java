@@ -97,12 +97,12 @@ public class DeliveryController {
             @PathVariable UUID id,
             @AuthenticationPrincipal UUID currentUserId,
             Authentication authentication) {
-        boolean isAdmin = hasAdminRole(authentication);
+        boolean isAdmin = hasSuperAdminRole(authentication);
         deliveryService.deleteDelivery(id, currentUserId, isAdmin);
     }
 
     @PostMapping("/{id}/offers")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'SUPPORT_ADMIN')")
     @ResponseStatus(HttpStatus.CREATED)
     public DeliveryOfferResponse createOffer(
             @PathVariable UUID id,
@@ -150,6 +150,16 @@ public class DeliveryController {
             return false;
         }
         return authentication.getAuthorities().stream()
-                .anyMatch(grantedAuthority -> grantedAuthority.getAuthority().equals("ROLE_ADMIN"));
+                .anyMatch(grantedAuthority ->
+                    grantedAuthority.getAuthority().equals("ROLE_SUPER_ADMIN") ||
+                    grantedAuthority.getAuthority().equals("ROLE_SUPPORT_ADMIN"));
+    }
+
+    private boolean hasSuperAdminRole(Authentication authentication) {
+        if (authentication == null) {
+            return false;
+        }
+        return authentication.getAuthorities().stream()
+                .anyMatch(grantedAuthority -> grantedAuthority.getAuthority().equals("ROLE_SUPER_ADMIN"));
     }
 }

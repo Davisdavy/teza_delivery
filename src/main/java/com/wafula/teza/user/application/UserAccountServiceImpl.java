@@ -22,6 +22,8 @@ import java.time.Instant;
 @Service
 public class UserAccountServiceImpl implements UserAccountService {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(UserAccountServiceImpl.class);
+
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final ApplicationEventPublisher eventPublisher;
@@ -39,14 +41,15 @@ public class UserAccountServiceImpl implements UserAccountService {
     @Transactional
     public UserAccount create(String email, String passwordHash, Role role) {
         if (userRepository.existsByEmail(email)) {
-            throw new ApiException(HttpStatus.CONFLICT, "Email already registered");
+            throw new ApiException(HttpStatus.CONFLICT, "Email is already registered");
         }
-        User saved = userRepository.save(User.builder()
+        User user = User.builder()
                 .email(email)
                 .passwordHash(passwordHash)
                 .role(role)
                 .enabled(true)
-                .build());
+                .build();
+        User saved = userRepository.save(user);
         return toAccount(saved);
     }
 
@@ -71,16 +74,16 @@ public class UserAccountServiceImpl implements UserAccountService {
     @Override
     @Transactional(readOnly = true)
     public List<UserAccount> findAll() {
-        return userRepository.findAll().stream()
-                .map(this::toAccount)
-                .toList();
+        return userRepository.findAll().stream().map(this::toAccount).toList();
     }
 
     @Override
     @Transactional
-    public UserAccount update(UUID id, String email, Boolean enabled, Role role) {
+    public UserAccount update(UUID id, String email, Boolean enabled, Role role, UUID updaterId) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "User account not found"));
+
+        log.info("User account {} updated by user/admin {}: email={}, enabled={}, role={}", id, updaterId, email, enabled, role);
 
         if (email != null && !email.equals(user.getEmail())) {
             if (userRepository.existsByEmail(email)) {

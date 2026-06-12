@@ -49,9 +49,9 @@ public class SecurityConfig {
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .requestMatchers("/actuator/health", "/actuator/info").permitAll()
                         // Representative role rules; modules add finer-grained @PreAuthorize later.
-                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/api/merchant/**").hasAnyRole("MERCHANT", "ADMIN")
-                        .requestMatchers("/api/rider/**").hasAnyRole("RIDER", "ADMIN")
+                        .requestMatchers("/api/admin/**").hasAnyRole("SUPER_ADMIN", "SUPPORT_ADMIN")
+                        .requestMatchers("/api/merchant/**").hasAnyRole("MERCHANT", "SUPER_ADMIN", "SUPPORT_ADMIN")
+                        .requestMatchers("/api/rider/**").hasAnyRole("RIDER", "SUPER_ADMIN", "SUPPORT_ADMIN")
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();

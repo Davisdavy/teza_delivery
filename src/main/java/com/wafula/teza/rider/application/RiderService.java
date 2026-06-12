@@ -19,7 +19,7 @@ public interface RiderService {
 
     RiderProfileResponse updateProfile(UUID userId, RiderProfileUpdateRequest request);
 
-    RiderProfileResponse updateOnboardingStatus(UUID profileId, OnboardingStatus onboardingStatus);
+    RiderProfileResponse updateOnboardingStatus(UUID profileId, OnboardingStatus onboardingStatus, UUID updaterId);
 
     void deleteProfile(UUID profileId, UUID currentUserId, boolean isAdmin);
 

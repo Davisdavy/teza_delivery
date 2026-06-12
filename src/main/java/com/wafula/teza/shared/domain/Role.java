@@ -10,7 +10,8 @@ package com.wafula.teza.shared.domain;
  * the rider module — neither may be obtained through the public registration endpoint.
  */
 public enum Role {
-    ADMIN,
+    SUPER_ADMIN,
+    SUPPORT_ADMIN,
     MERCHANT,
     RIDER,
     CUSTOMER

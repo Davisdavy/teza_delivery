@@ -45,7 +45,7 @@ public class AdminBootstrap implements ApplicationRunner {
         if (userAccountService.existsByEmail(properties.email())) {
             return;
         }
-        userAccountService.create(properties.email(), passwordEncoder.encode(properties.password()), Role.ADMIN);
-        log.info("Seeded bootstrap ADMIN account: {}", properties.email());
+        userAccountService.create(properties.email(), passwordEncoder.encode(properties.password()), Role.SUPER_ADMIN);
+        log.info("Seeded bootstrap SUPER_ADMIN account: {}", properties.email());
     }
 }

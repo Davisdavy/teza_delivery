@@ -180,7 +180,7 @@ class DeliveryServiceTest {
     @Test
     void testCreateDeliveryAsAdminOrRiderThrowsForbidden() {
         UUID adminId = UUID.randomUUID();
-        UserAccount adminAccount = new UserAccount(adminId, "admin@test.com", "hash", Role.ADMIN, true);
+        UserAccount adminAccount = new UserAccount(adminId, "admin@test.com", "hash", Role.SUPER_ADMIN, true);
         
         DeliveryCreateRequest request = new DeliveryCreateRequest(
                 "Pickup 123", -1.2833, 36.8167,

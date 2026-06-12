@@ -49,7 +49,7 @@ public class UserController {
             @AuthenticationPrincipal UUID currentUserId,
             @Valid @RequestBody UserUpdateRequest request) {
         // Regular users can only update their own email
-        UserAccount updated = userAccountService.update(currentUserId, request.email(), null, null);
+        UserAccount updated = userAccountService.update(currentUserId, request.email(), null, null, currentUserId);
         return UserMapper.toResponse(updated);
     }
 
@@ -62,7 +62,7 @@ public class UserController {
     }
 
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'SUPPORT_ADMIN')")
     public List<UserResponse> getAllUsers() {
         return userAccountService.findAll().stream()
                 .map(UserMapper::toResponse)
@@ -83,11 +83,12 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'SUPPORT_ADMIN')")
     public UserResponse updateUserById(
             @PathVariable UUID id,
+            @AuthenticationPrincipal UUID currentUserId,
             @Valid @RequestBody UserUpdateRequest request) {
-        UserAccount updated = userAccountService.update(id, request.email(), request.enabled(), request.role());
+        UserAccount updated = userAccountService.update(id, request.email(), request.enabled(), request.role(), currentUserId);
         return UserMapper.toResponse(updated);
     }
 
@@ -97,7 +98,7 @@ public class UserController {
             @PathVariable UUID id,
             @AuthenticationPrincipal UUID currentUserId,
             Authentication authentication) {
-        if (!hasAdminRole(authentication) && !currentUserId.equals(id)) {
+        if (!hasSuperAdminRole(authentication) && !currentUserId.equals(id)) {
             throw new ApiException(HttpStatus.FORBIDDEN, "Access denied: you cannot delete other user accounts");
         }
         userAccountService.delete(id);
@@ -108,6 +109,16 @@ public class UserController {
             return false;
         }
         return authentication.getAuthorities().stream()
-                .anyMatch(grantedAuthority -> grantedAuthority.getAuthority().equals("ROLE_ADMIN"));
+                .anyMatch(grantedAuthority ->
+                    grantedAuthority.getAuthority().equals("ROLE_SUPER_ADMIN") ||
+                    grantedAuthority.getAuthority().equals("ROLE_SUPPORT_ADMIN"));
+    }
+
+    private boolean hasSuperAdminRole(Authentication authentication) {
+        if (authentication == null) {
+            return false;
+        }
+        return authentication.getAuthorities().stream()
+                .anyMatch(grantedAuthority -> grantedAuthority.getAuthority().equals("ROLE_SUPER_ADMIN"));
     }
 }

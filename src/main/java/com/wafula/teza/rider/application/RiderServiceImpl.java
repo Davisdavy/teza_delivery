@@ -24,6 +24,8 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class RiderServiceImpl implements RiderService {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(RiderServiceImpl.class);
+
     private final RiderProfileRepository riderProfileRepository;
     private final RiderLocationRepository riderLocationRepository;
     private final UserAccountService userAccountService;
@@ -110,9 +112,10 @@ public class RiderServiceImpl implements RiderService {
 
     @Override
     @Transactional
-    public RiderProfileResponse updateOnboardingStatus(UUID profileId, OnboardingStatus onboardingStatus) {
+    public RiderProfileResponse updateOnboardingStatus(UUID profileId, OnboardingStatus onboardingStatus, UUID updaterId) {
         RiderProfile profile = riderProfileRepository.findById(profileId)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Rider profile not found"));
+        log.info("Rider profile {} onboarding status updated to {} by administrator/user {}", profileId, onboardingStatus, updaterId);
         profile.setOnboardingStatus(onboardingStatus);
         RiderProfile updated = riderProfileRepository.save(profile);
         return RiderMapper.toProfileResponse(updated);

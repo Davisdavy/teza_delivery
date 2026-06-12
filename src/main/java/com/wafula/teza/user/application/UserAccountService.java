@@ -26,7 +26,7 @@ public interface UserAccountService {
 
     List<UserAccount> findAll();
 
-    UserAccount update(UUID id, String email, Boolean enabled, Role role);
+    UserAccount update(UUID id, String email, Boolean enabled, Role role, UUID updaterId);
 
     void delete(UUID id);
 

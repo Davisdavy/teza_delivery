@@ -120,7 +120,7 @@ class RiderServiceTest {
         when(riderProfileRepository.findById(profileId)).thenReturn(Optional.of(profile));
         when(riderProfileRepository.save(any(RiderProfile.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        RiderProfileResponse response = riderService.updateOnboardingStatus(profileId, OnboardingStatus.APPROVED);
+        RiderProfileResponse response = riderService.updateOnboardingStatus(profileId, OnboardingStatus.APPROVED, UUID.randomUUID());
 
         assertEquals(OnboardingStatus.APPROVED, response.onboardingStatus());
         verify(riderProfileRepository).save(profile);
