@@ -442,12 +442,30 @@ public class DeliveryServiceImpl implements DeliveryService {
         Instant now = Instant.now();
         if (newStatus == DeliveryStatus.ASSIGNED) {
             delivery.setAcceptedAt(now);
+            if (delivery.getRiderId() != null) {
+                try {
+                    RiderProfileResponse riderProfile = riderService.getProfileById(delivery.getRiderId(), null, true);
+                    riderService.updateProfile(riderProfile.userId(), new com.wafula.teza.rider.api.dto.RiderProfileUpdateRequest(null, null, null, false));
+                } catch (ApiException ignored) {}
+            }
         } else if (newStatus == DeliveryStatus.PICKED_UP) {
             delivery.setPickedUpAt(now);
         } else if (newStatus == DeliveryStatus.DELIVERED) {
             delivery.setDeliveredAt(now);
+            if (delivery.getRiderId() != null) {
+                try {
+                    RiderProfileResponse riderProfile = riderService.getProfileById(delivery.getRiderId(), null, true);
+                    riderService.updateProfile(riderProfile.userId(), new com.wafula.teza.rider.api.dto.RiderProfileUpdateRequest(null, null, null, true));
+                } catch (ApiException ignored) {}
+            }
         } else if (newStatus == DeliveryStatus.CANCELLED) {
             delivery.setCancelledAt(now);
+            if (delivery.getRiderId() != null) {
+                try {
+                    RiderProfileResponse riderProfile = riderService.getProfileById(delivery.getRiderId(), null, true);
+                    riderService.updateProfile(riderProfile.userId(), new com.wafula.teza.rider.api.dto.RiderProfileUpdateRequest(null, null, null, true));
+                } catch (ApiException ignored) {}
+            }
         }
 
         eventPublisher.publishEvent(new DeliveryStatusChangedEvent(

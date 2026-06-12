@@ -568,4 +568,47 @@ class DeliveryServiceTest {
         verify(deliveryOfferRepository, org.mockito.Mockito.times(2)).save(any(DeliveryOffer.class));
         verify(eventPublisher).publishEvent(any(DeliveryOfferCreatedEvent.class));
     }
+
+    @Test
+    void testUpdateDeliveryStatusUpdatesRiderAvailability() {
+        UUID deliveryId = UUID.randomUUID();
+        UUID customerId = UUID.randomUUID();
+        UUID riderId = UUID.randomUUID();
+        UUID riderUserId = UUID.randomUUID();
+
+        Delivery delivery = Delivery.builder()
+                .id(deliveryId)
+                .customerId(customerId)
+                .riderId(riderId)
+                .pickupAddress("A")
+                .dropoffAddress("B")
+                .status(DeliveryStatus.IN_TRANSIT)
+                .deliveryFee(BigDecimal.TEN)
+                .build();
+
+        com.wafula.teza.delivery.api.dto.DeliveryStatusUpdateRequest request =
+                new com.wafula.teza.delivery.api.dto.DeliveryStatusUpdateRequest(DeliveryStatus.DELIVERED, "Delivered successfully");
+
+        RiderProfileResponse riderProfile = new RiderProfileResponse(
+                riderId,
+                riderUserId,
+                com.wafula.teza.rider.domain.VehicleType.MOTORCYCLE,
+                "PLATE123",
+                true,
+                com.wafula.teza.rider.domain.OnboardingStatus.APPROVED,
+                Instant.now(),
+                Instant.now()
+        );
+
+        when(deliveryRepository.findById(deliveryId)).thenReturn(Optional.of(delivery));
+        when(riderService.getProfileByUserId(riderUserId)).thenReturn(riderProfile);
+        when(riderService.getProfileById(riderId, null, true)).thenReturn(riderProfile);
+        when(deliveryRepository.save(any(Delivery.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        DeliveryResponse response = deliveryService.updateDeliveryStatus(deliveryId, riderUserId, false, request);
+
+        assertNotNull(response);
+        assertEquals(DeliveryStatus.DELIVERED, response.status());
+        verify(riderService).updateProfile(riderUserId, new com.wafula.teza.rider.api.dto.RiderProfileUpdateRequest(null, null, null, true));
+    }
 }
