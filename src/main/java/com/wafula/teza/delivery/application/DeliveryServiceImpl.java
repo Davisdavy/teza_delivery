@@ -162,6 +162,15 @@ public class DeliveryServiceImpl implements DeliveryService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public List<DeliveryOfferResponse> getOffersForRider(UUID riderUserId) {
+        RiderProfileResponse rider = getRiderProfile(riderUserId);
+        return deliveryOfferRepository.findByRiderIdAndStatus(rider.id(), OfferStatus.PENDING).stream()
+                .map(DeliveryMapper::toOfferResponse)
+                .toList();
+    }
+
+    @Override
     @Transactional
     public DeliveryResponse updateDelivery(UUID deliveryId, UUID userId, DeliveryUpdateRequest request) {
         Delivery delivery = deliveryRepository.findById(deliveryId)

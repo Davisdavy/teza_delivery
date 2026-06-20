@@ -24,6 +24,8 @@ public interface DeliveryService {
 
     List<DeliveryResponse> getDeliveriesForRider(UUID riderUserId);
 
+    List<DeliveryOfferResponse> getOffersForRider(UUID riderUserId);
+
     DeliveryResponse updateDelivery(UUID deliveryId, UUID userId, DeliveryUpdateRequest request);
 
     DeliveryResponse updateDeliveryStatus(UUID deliveryId, UUID currentUserId, boolean isAdmin, DeliveryStatusUpdateRequest request);

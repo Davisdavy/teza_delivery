@@ -73,6 +73,11 @@ public class DeliveryController {
         return deliveryService.getDeliveriesForRider(currentUserId);
     }
 
+    @GetMapping("/rider/offers")
+    public List<DeliveryOfferResponse> getOffersForRider(@AuthenticationPrincipal UUID currentUserId) {
+        return deliveryService.getOffersForRider(currentUserId);
+    }
+
     @GetMapping
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'SUPPORT_ADMIN')")
     public List<DeliveryResponse> getAllDeliveries() {
