@@ -437,6 +437,14 @@ public class DeliveryServiceImpl implements DeliveryService {
                 if (delivery.getRiderId() != null && delivery.getRiderId().equals(rider.id())) {
                     hasAccess = true;
                 }
+                if (!hasAccess) {
+                    List<DeliveryOffer> offers = deliveryOfferRepository.findByRiderIdAndStatus(rider.id(), OfferStatus.PENDING);
+                    boolean hasPendingOffer = offers.stream()
+                            .anyMatch(o -> o.getDelivery().getId().equals(delivery.getId()));
+                    if (hasPendingOffer) {
+                        hasAccess = true;
+                    }
+                }
             } catch (ApiException ignored) {}
         }
 
