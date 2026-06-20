@@ -1119,6 +1119,36 @@
 					"response": []
 				},
 				{
+					"name": "List Offers for Rider (Rider Only)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{authToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"url": {
+							"raw": "{{baseUrl}}/api/delivery/rider/offers",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"delivery",
+								"rider",
+								"offers"
+							]
+						},
+						"description": "Get all active pending offers dispatched to the authenticated Rider."
+					},
+					"response": []
+				},
+				{
 					"name": "List Matching Riders for Delivery",
 					"request": {
 						"auth": {

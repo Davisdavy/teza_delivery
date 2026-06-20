@@ -166,6 +166,7 @@ public class DeliveryServiceImpl implements DeliveryService {
     public List<DeliveryOfferResponse> getOffersForRider(UUID riderUserId) {
         RiderProfileResponse rider = getRiderProfile(riderUserId);
         return deliveryOfferRepository.findByRiderIdAndStatus(rider.id(), OfferStatus.PENDING).stream()
+                .filter(offer -> offer.getExpiresAt().isAfter(Instant.now()))
                 .map(DeliveryMapper::toOfferResponse)
                 .toList();
     }
@@ -417,21 +418,22 @@ public class DeliveryServiceImpl implements DeliveryService {
     }
 
     private void verifyDeliveryAccess(Delivery delivery, UUID userId) {
-        boolean hasAccess = false;
-        if (delivery.getCustomerId() != null && delivery.getCustomerId().equals(userId)) {
-            hasAccess = true;
-        }
+        UserAccount user = userAccountService.findById(userId)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "User account not found"));
 
-        if (!hasAccess) {
+        boolean hasAccess = false;
+        if (user.role() == Role.CUSTOMER) {
+            if (delivery.getCustomerId() != null && delivery.getCustomerId().equals(userId)) {
+                hasAccess = true;
+            }
+        } else if (user.role() == Role.MERCHANT) {
             try {
                 MerchantResponse merchant = merchantService.getProfileByUserId(userId);
                 if (delivery.getMerchantId() != null && delivery.getMerchantId().equals(merchant.id())) {
                     hasAccess = true;
                 }
             } catch (ApiException ignored) {}
-        }
-
-        if (!hasAccess) {
+        } else if (user.role() == Role.RIDER) {
             try {
                 RiderProfileResponse rider = riderService.getProfileByUserId(userId);
                 if (delivery.getRiderId() != null && delivery.getRiderId().equals(rider.id())) {
@@ -446,6 +448,8 @@ public class DeliveryServiceImpl implements DeliveryService {
                     }
                 }
             } catch (ApiException ignored) {}
+        } else if (user.role() == Role.SUPER_ADMIN || user.role() == Role.SUPPORT_ADMIN) {
+            hasAccess = true;
         }
 
         if (!hasAccess) {
