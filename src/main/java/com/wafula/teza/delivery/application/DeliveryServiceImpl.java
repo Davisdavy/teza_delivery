@@ -647,7 +647,7 @@ public class DeliveryServiceImpl implements DeliveryService {
                     .delivery(delivery)
                     .riderId(nextRiderId)
                     .status(OfferStatus.PENDING)
-                    .expiresAt(Instant.now().plusSeconds(45))
+                    .expiresAt(Instant.now().plusSeconds(60))
                     .build();
 
             DeliveryOffer saved = deliveryOfferRepository.save(offer);
@@ -659,7 +659,7 @@ public class DeliveryServiceImpl implements DeliveryService {
                     delivery.getId(),
                     nextRiderId,
                     riderProfile.userId(),
-                    45
+                    60
             ));
         } else {
             matchingRidersCache.remove(delivery.getId());
