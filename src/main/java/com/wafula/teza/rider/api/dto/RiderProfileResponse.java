@@ -13,6 +13,7 @@ public record RiderProfileResponse(
         boolean available,
         OnboardingStatus onboardingStatus,
         Instant createdAt,
-        Instant updatedAt
+        Instant updatedAt,
+        long totalDeliveries
 ) {
 }

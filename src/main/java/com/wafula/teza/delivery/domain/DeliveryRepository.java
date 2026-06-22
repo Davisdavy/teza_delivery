@@ -16,4 +16,6 @@ public interface DeliveryRepository extends JpaRepository<Delivery, UUID> {
     List<Delivery> findByRiderId(UUID riderId);
 
     List<Delivery> findByStatus(DeliveryStatus status);
+
+    long countByRiderIdAndStatus(UUID riderId, DeliveryStatus status);
 }

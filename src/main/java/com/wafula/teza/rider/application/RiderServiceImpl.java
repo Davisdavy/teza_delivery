@@ -17,6 +17,8 @@ import com.wafula.teza.user.application.UserAccountService;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
+import com.wafula.teza.delivery.domain.DeliveryRepository;
+import com.wafula.teza.delivery.domain.DeliveryStatus;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,14 +31,17 @@ public class RiderServiceImpl implements RiderService {
     private final RiderProfileRepository riderProfileRepository;
     private final RiderLocationRepository riderLocationRepository;
     private final UserAccountService userAccountService;
+    private final DeliveryRepository deliveryRepository;
 
     public RiderServiceImpl(
             RiderProfileRepository riderProfileRepository,
             RiderLocationRepository riderLocationRepository,
-            UserAccountService userAccountService) {
+            UserAccountService userAccountService,
+            DeliveryRepository deliveryRepository) {
         this.riderProfileRepository = riderProfileRepository;
         this.riderLocationRepository = riderLocationRepository;
         this.userAccountService = userAccountService;
+        this.deliveryRepository = deliveryRepository;
     }
 
     @Override
@@ -70,7 +75,8 @@ public class RiderServiceImpl implements RiderService {
     public RiderProfileResponse getProfileByUserId(UUID userId) {
         RiderProfile profile = riderProfileRepository.findByUserId(userId)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Rider profile not found"));
-        return RiderMapper.toProfileResponse(profile);
+        long deliveriesCount = deliveryRepository.countByRiderIdAndStatus(profile.getId(), DeliveryStatus.DELIVERED);
+        return RiderMapper.toProfileResponse(profile, deliveriesCount);
     }
 
     @Override
@@ -83,7 +89,8 @@ public class RiderServiceImpl implements RiderService {
             throw new ApiException(HttpStatus.FORBIDDEN, "Access denied: you do not own this profile");
         }
 
-        return RiderMapper.toProfileResponse(profile);
+        long deliveriesCount = deliveryRepository.countByRiderIdAndStatus(profile.getId(), DeliveryStatus.DELIVERED);
+        return RiderMapper.toProfileResponse(profile, deliveriesCount);
     }
 
     @Override
@@ -107,7 +114,8 @@ public class RiderServiceImpl implements RiderService {
         }
 
         RiderProfile updated = riderProfileRepository.save(profile);
-        return RiderMapper.toProfileResponse(updated);
+        long deliveriesCount = deliveryRepository.countByRiderIdAndStatus(updated.getId(), DeliveryStatus.DELIVERED);
+        return RiderMapper.toProfileResponse(updated, deliveriesCount);
     }
 
     @Override
@@ -118,7 +126,8 @@ public class RiderServiceImpl implements RiderService {
         log.info("Rider profile {} onboarding status updated to {} by administrator/user {}", profileId, onboardingStatus, updaterId);
         profile.setOnboardingStatus(onboardingStatus);
         RiderProfile updated = riderProfileRepository.save(profile);
-        return RiderMapper.toProfileResponse(updated);
+        long deliveriesCount = deliveryRepository.countByRiderIdAndStatus(updated.getId(), DeliveryStatus.DELIVERED);
+        return RiderMapper.toProfileResponse(updated, deliveriesCount);
     }
 
     @Override
@@ -170,7 +179,10 @@ public class RiderServiceImpl implements RiderService {
     public List<RiderProfileResponse> findAvailableRiders() {
         return riderProfileRepository.findAllByOnboardingStatusAndAvailable(OnboardingStatus.APPROVED, true)
                 .stream()
-                .map(RiderMapper::toProfileResponse)
+                .map(profile -> {
+                    long deliveriesCount = deliveryRepository.countByRiderIdAndStatus(profile.getId(), DeliveryStatus.DELIVERED);
+                    return RiderMapper.toProfileResponse(profile, deliveriesCount);
+                })
                 .toList();
     }
 
@@ -186,7 +198,10 @@ public class RiderServiceImpl implements RiderService {
     @Transactional(readOnly = true)
     public List<RiderProfileResponse> getAllProfiles() {
         return riderProfileRepository.findAll().stream()
-                .map(RiderMapper::toProfileResponse)
+                .map(profile -> {
+                    long deliveriesCount = deliveryRepository.countByRiderIdAndStatus(profile.getId(), DeliveryStatus.DELIVERED);
+                    return RiderMapper.toProfileResponse(profile, deliveriesCount);
+                })
                 .toList();
     }
 }

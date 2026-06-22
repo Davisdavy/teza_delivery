@@ -11,6 +11,10 @@ public final class RiderMapper {
     }
 
     public static RiderProfileResponse toProfileResponse(RiderProfile profile) {
+        return toProfileResponse(profile, 0L);
+    }
+
+    public static RiderProfileResponse toProfileResponse(RiderProfile profile, long totalDeliveries) {
         if (profile == null) {
             return null;
         }
@@ -22,7 +26,8 @@ public final class RiderMapper {
                 profile.isAvailable(),
                 profile.getOnboardingStatus(),
                 profile.getCreatedAt(),
-                profile.getUpdatedAt()
+                profile.getUpdatedAt(),
+                totalDeliveries
         );
     }
 
