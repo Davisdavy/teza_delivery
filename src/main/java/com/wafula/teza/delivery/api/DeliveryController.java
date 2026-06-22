@@ -8,6 +8,7 @@ import com.wafula.teza.delivery.api.dto.DeliveryStatusUpdateRequest;
 import com.wafula.teza.delivery.api.dto.DeliveryUpdateRequest;
 import com.wafula.teza.delivery.api.dto.OfferCreateRequest;
 import com.wafula.teza.delivery.api.dto.OfferResponseRequest;
+import com.wafula.teza.delivery.api.dto.RiderStatsResponse;
 import com.wafula.teza.delivery.application.DeliveryService;
 import com.wafula.teza.dispatch.domain.RankedRider;
 import jakarta.validation.Valid;
@@ -76,6 +77,11 @@ public class DeliveryController {
     @GetMapping("/rider/offers")
     public List<DeliveryOfferResponse> getOffersForRider(@AuthenticationPrincipal UUID currentUserId) {
         return deliveryService.getOffersForRider(currentUserId);
+    }
+
+    @GetMapping("/rider/stats")
+    public RiderStatsResponse getRiderStats(@AuthenticationPrincipal UUID currentUserId) {
+        return deliveryService.getRiderStats(currentUserId);
     }
 
     @GetMapping

@@ -8,11 +8,14 @@ import com.wafula.teza.delivery.api.dto.DeliveryStatusUpdateRequest;
 import com.wafula.teza.delivery.api.dto.DeliveryUpdateRequest;
 import com.wafula.teza.delivery.api.dto.OfferCreateRequest;
 import com.wafula.teza.delivery.api.dto.OfferResponseRequest;
+import com.wafula.teza.delivery.api.dto.RiderStatsResponse;
 import com.wafula.teza.dispatch.domain.RankedRider;
 import java.util.List;
 import java.util.UUID;
 
 public interface DeliveryService {
+
+    RiderStatsResponse getRiderStats(UUID riderUserId);
 
     DeliveryResponse createDelivery(UUID userId, DeliveryCreateRequest request);
 

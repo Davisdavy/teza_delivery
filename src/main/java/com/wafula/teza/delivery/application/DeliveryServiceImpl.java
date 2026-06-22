@@ -8,6 +8,7 @@ import com.wafula.teza.delivery.api.dto.DeliveryStatusUpdateRequest;
 import com.wafula.teza.delivery.api.dto.DeliveryUpdateRequest;
 import com.wafula.teza.delivery.api.dto.OfferCreateRequest;
 import com.wafula.teza.delivery.api.dto.OfferResponseRequest;
+import com.wafula.teza.delivery.api.dto.RiderStatsResponse;
 import com.wafula.teza.delivery.domain.Delivery;
 import com.wafula.teza.delivery.domain.DeliveryOffer;
 import com.wafula.teza.delivery.domain.DeliveryOfferRepository;
@@ -159,6 +160,31 @@ public class DeliveryServiceImpl implements DeliveryService {
         return deliveryRepository.findByRiderId(rider.id()).stream()
                 .map(DeliveryMapper::toResponse)
                 .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public RiderStatsResponse getRiderStats(UUID riderUserId) {
+        RiderProfileResponse rider = getRiderProfile(riderUserId);
+        UUID riderId = rider.id();
+
+        List<Delivery> deliveries = deliveryRepository.findByRiderId(riderId);
+        long completed = deliveries.stream()
+                .filter(d -> d.getStatus() == DeliveryStatus.DELIVERED)
+                .count();
+        long cancelled = deliveries.stream()
+                .filter(d -> d.getStatus() == DeliveryStatus.CANCELLED)
+                .count();
+
+        List<DeliveryOffer> offers = deliveryOfferRepository.findByRiderId(riderId);
+        long declined = offers.stream()
+                .filter(o -> o.getStatus() == OfferStatus.DECLINED)
+                .count();
+        long expired = offers.stream()
+                .filter(o -> o.getStatus() == OfferStatus.EXPIRED)
+                .count();
+
+        return new RiderStatsResponse(completed, cancelled, declined, expired);
     }
 
     @Override
