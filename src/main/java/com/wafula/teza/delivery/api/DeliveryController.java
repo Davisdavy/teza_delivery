@@ -27,6 +27,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestParam;
+import com.wafula.teza.shared.api.dto.PagedResponse;
 
 /**
  * REST controller for managing deliveries, status updates, status history logs,
@@ -86,8 +88,10 @@ public class DeliveryController {
 
     @GetMapping
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'SUPPORT_ADMIN')")
-    public List<DeliveryResponse> getAllDeliveries() {
-        return deliveryService.getAllDeliveries();
+    public PagedResponse<DeliveryResponse> getAllDeliveries(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return deliveryService.getAllDeliveries(page, size);
     }
 
     @PutMapping("/{id}")

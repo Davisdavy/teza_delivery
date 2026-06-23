@@ -13,7 +13,10 @@ import com.wafula.teza.dispatch.domain.RankedRider;
 import java.util.List;
 import java.util.UUID;
 
+import com.wafula.teza.shared.api.dto.PagedResponse;
+
 public interface DeliveryService {
+
 
     RiderStatsResponse getRiderStats(UUID riderUserId);
 
@@ -48,4 +51,6 @@ public interface DeliveryService {
     List<RankedRider> findMatchingRiders(UUID deliveryId, UUID currentUserId, boolean isAdmin);
 
     List<DeliveryResponse> getAllDeliveries();
+
+    PagedResponse<DeliveryResponse> getAllDeliveries(int page, int size);
 }

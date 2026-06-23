@@ -42,6 +42,12 @@ import com.wafula.teza.shared.event.DeliveryOfferCreatedEvent;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.wafula.teza.shared.api.dto.PagedResponse;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+
 
 @Service
 public class DeliveryServiceImpl implements DeliveryService {
@@ -736,5 +742,14 @@ public class DeliveryServiceImpl implements DeliveryService {
         return deliveryRepository.findAll().stream()
                 .map(DeliveryMapper::toResponse)
                 .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PagedResponse<DeliveryResponse> getAllDeliveries(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Page<Delivery> deliveryPage = deliveryRepository.findAll(pageable);
+        Page<DeliveryResponse> responsePage = deliveryPage.map(DeliveryMapper::toResponse);
+        return PagedResponse.of(responsePage);
     }
 }
