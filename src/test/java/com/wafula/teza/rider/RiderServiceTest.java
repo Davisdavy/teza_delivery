@@ -44,11 +44,14 @@ class RiderServiceTest {
     @Mock
     private UserAccountService userAccountService;
 
+    @Mock
+    private com.wafula.teza.delivery.domain.DeliveryRepository deliveryRepository;
+
     private RiderService riderService;
 
     @BeforeEach
     void setUp() {
-        riderService = new RiderServiceImpl(riderProfileRepository, riderLocationRepository, userAccountService);
+        riderService = new RiderServiceImpl(riderProfileRepository, riderLocationRepository, userAccountService, deliveryRepository);
     }
 
     @Test

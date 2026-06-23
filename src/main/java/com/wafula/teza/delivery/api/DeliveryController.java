@@ -135,6 +135,13 @@ public class DeliveryController {
         return deliveryService.respondToOffer(offerId, currentUserId, request);
     }
 
+    @GetMapping("/offers/{offerId}")
+    public DeliveryOfferResponse getOfferById(
+            @PathVariable UUID offerId,
+            @AuthenticationPrincipal UUID currentUserId) {
+        return deliveryService.getOfferById(offerId, currentUserId);
+    }
+
     @GetMapping("/{id}/offers")
     public List<DeliveryOfferResponse> getOffersForDelivery(
             @PathVariable UUID id,

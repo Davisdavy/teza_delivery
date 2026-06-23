@@ -39,6 +39,8 @@ public interface DeliveryService {
 
     DeliveryOfferResponse respondToOffer(UUID offerId, UUID riderUserId, OfferResponseRequest request);
 
+    DeliveryOfferResponse getOfferById(UUID offerId, UUID currentUserId);
+
     List<DeliveryOfferResponse> getOffersForDelivery(UUID deliveryId, UUID currentUserId, boolean isAdmin);
 
     List<DeliveryStatusHistoryResponse> getStatusHistory(UUID deliveryId, UUID currentUserId, boolean isAdmin);

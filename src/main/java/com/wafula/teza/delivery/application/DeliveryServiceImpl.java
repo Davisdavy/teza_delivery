@@ -381,6 +381,44 @@ public class DeliveryServiceImpl implements DeliveryService {
     }
 
     @Override
+    @Transactional
+    public DeliveryOfferResponse getOfferById(UUID offerId, UUID currentUserId) {
+        DeliveryOffer offer = deliveryOfferRepository.findById(offerId)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Offer not found"));
+
+        UserAccount user = userAccountService.findById(currentUserId)
+                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "User account not found"));
+
+        boolean hasAccess = false;
+        if (user.role() == Role.SUPER_ADMIN || user.role() == Role.SUPPORT_ADMIN) {
+            hasAccess = true;
+        } else if (user.role() == Role.RIDER) {
+            try {
+                RiderProfileResponse rider = riderService.getProfileByUserId(currentUserId);
+                if (offer.getRiderId().equals(rider.id())) {
+                    hasAccess = true;
+                }
+            } catch (ApiException ignored) {}
+        } else {
+            try {
+                verifyDeliveryAccess(offer.getDelivery(), currentUserId);
+                hasAccess = true;
+            } catch (ApiException ignored) {}
+        }
+
+        if (!hasAccess) {
+            throw new ApiException(HttpStatus.FORBIDDEN, "Access denied: you cannot view this offer");
+        }
+
+        if (offer.getStatus() == OfferStatus.PENDING && Instant.now().isAfter(offer.getExpiresAt())) {
+            offer.setStatus(OfferStatus.EXPIRED);
+            offer = deliveryOfferRepository.save(offer);
+        }
+
+        return DeliveryMapper.toOfferResponse(offer);
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public List<DeliveryOfferResponse> getOffersForDelivery(UUID deliveryId, UUID currentUserId, boolean isAdmin) {
         Delivery delivery = deliveryRepository.findById(deliveryId)

@@ -18,6 +18,9 @@ import com.wafula.teza.notification.application.NotificationServiceImpl;
 import com.wafula.teza.notification.domain.Notification;
 import com.wafula.teza.notification.domain.NotificationRepository;
 import com.wafula.teza.notification.domain.NotificationStatus;
+import com.wafula.teza.notification.domain.NotificationToken;
+import com.wafula.teza.notification.domain.NotificationTokenRepository;
+import com.wafula.teza.notification.infrastructure.FirebasePushService;
 import com.wafula.teza.rider.api.dto.RiderProfileResponse;
 import com.wafula.teza.rider.application.RiderService;
 import com.wafula.teza.shared.event.DeliveryOfferCreatedEvent;
@@ -41,6 +44,12 @@ class NotificationServiceTest {
     private NotificationRepository notificationRepository;
 
     @Mock
+    private NotificationTokenRepository notificationTokenRepository;
+
+    @Mock
+    private FirebasePushService firebasePushService;
+
+    @Mock
     private MerchantService merchantService;
 
     @Mock
@@ -51,7 +60,11 @@ class NotificationServiceTest {
 
     @BeforeEach
     void setUp() {
-        notificationService = new NotificationServiceImpl(notificationRepository);
+        notificationService = new NotificationServiceImpl(
+                notificationRepository,
+                notificationTokenRepository,
+                firebasePushService
+        );
         eventListener = new NotificationEventListener(notificationService, merchantService, riderService);
     }
 
@@ -200,7 +213,7 @@ class NotificationServiceTest {
         );
 
         RiderProfileResponse riderResponse = new RiderProfileResponse(
-                riderId, riderUserId, null, null, true, null, Instant.now(), Instant.now()
+                riderId, riderUserId, null, null, true, null, Instant.now(), Instant.now(), 0L
         );
 
         when(riderService.getProfileById(riderId, null, true)).thenReturn(riderResponse);
@@ -232,5 +245,61 @@ class NotificationServiceTest {
         eventListener.onDeliveryOfferCreated(event);
 
         verify(notificationRepository).save(any(Notification.class));
+    }
+
+    @Test
+    void testRegisterDeviceTokenNew() {
+        UUID userId = UUID.randomUUID();
+        String token = "fcm-token-123";
+        String deviceId = "device-id-123";
+        String deviceType = "android";
+        String appVersion = "1.0.0";
+
+        when(notificationTokenRepository.findByToken(token)).thenReturn(Optional.empty());
+
+        notificationService.registerDeviceToken(userId, token, deviceId, deviceType, appVersion);
+
+        verify(notificationTokenRepository).save(any(NotificationToken.class));
+    }
+
+    @Test
+    void testRegisterDeviceTokenExisting() {
+        UUID userId = UUID.randomUUID();
+        String token = "fcm-token-123";
+        String deviceId = "device-id-123";
+        String deviceType = "android";
+        String appVersion = "1.0.0";
+
+        NotificationToken existingToken = NotificationToken.builder()
+                .userId(UUID.randomUUID())
+                .token(token)
+                .build();
+
+        when(notificationTokenRepository.findByToken(token)).thenReturn(Optional.of(existingToken));
+
+        notificationService.registerDeviceToken(userId, token, deviceId, deviceType, appVersion);
+
+        verify(notificationTokenRepository).save(existingToken);
+        assertEquals(userId, existingToken.getUserId());
+        assertEquals(deviceId, existingToken.getDeviceId());
+    }
+
+    @Test
+    void testUnregisterDeviceToken() {
+        UUID userId = UUID.randomUUID();
+        String token = "fcm-token-123";
+
+        NotificationToken existingToken = NotificationToken.builder()
+                .userId(userId)
+                .token(token)
+                .active(true)
+                .build();
+
+        when(notificationTokenRepository.findByToken(token)).thenReturn(Optional.of(existingToken));
+
+        notificationService.unregisterDeviceToken(userId, token);
+
+        verify(notificationTokenRepository).save(existingToken);
+        assertEquals(false, existingToken.isActive());
     }
 }

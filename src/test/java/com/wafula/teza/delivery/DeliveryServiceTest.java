@@ -235,6 +235,8 @@ class DeliveryServiceTest {
                 .deliveryFee(BigDecimal.TEN)
                 .build();
 
+        UserAccount customerAccount = new UserAccount(customerId, "customer@test.com", "hash", Role.CUSTOMER, true);
+        when(userAccountService.findById(customerId)).thenReturn(Optional.of(customerAccount));
         when(deliveryRepository.findById(deliveryId)).thenReturn(Optional.of(delivery));
 
         DeliveryResponse response = deliveryService.getDeliveryById(deliveryId, customerId, false);
@@ -258,10 +260,9 @@ class DeliveryServiceTest {
                 .deliveryFee(BigDecimal.TEN)
                 .build();
 
+        UserAccount nonOwnerAccount = new UserAccount(nonOwnerCustomerId, "nonowner@test.com", "hash", Role.CUSTOMER, true);
+        when(userAccountService.findById(nonOwnerCustomerId)).thenReturn(Optional.of(nonOwnerAccount));
         when(deliveryRepository.findById(deliveryId)).thenReturn(Optional.of(delivery));
-        // Mock profile lookup to raise exception for merchants/riders, confirming they aren't linked
-        when(merchantService.getProfileByUserId(nonOwnerCustomerId)).thenThrow(new ApiException(HttpStatus.NOT_FOUND, "Not found"));
-        when(riderService.getProfileByUserId(nonOwnerCustomerId)).thenThrow(new ApiException(HttpStatus.NOT_FOUND, "Not found"));
 
         ApiException exception = assertThrows(ApiException.class, () -> 
             deliveryService.getDeliveryById(deliveryId, nonOwnerCustomerId, false)
@@ -403,7 +404,8 @@ class DeliveryServiceTest {
                 true,
                 com.wafula.teza.rider.domain.OnboardingStatus.APPROVED,
                 Instant.now(),
-                Instant.now()
+                Instant.now(),
+                0L
         );
 
         com.wafula.teza.rider.api.dto.RiderLocationResponse riderLocation = new com.wafula.teza.rider.api.dto.RiderLocationResponse(
@@ -486,7 +488,8 @@ class DeliveryServiceTest {
                 true,
                 com.wafula.teza.rider.domain.OnboardingStatus.APPROVED,
                 Instant.now(),
-                Instant.now()
+                Instant.now(),
+                0L
         );
 
         com.wafula.teza.rider.api.dto.RiderLocationResponse riderLocation = new com.wafula.teza.rider.api.dto.RiderLocationResponse(
@@ -557,11 +560,11 @@ class DeliveryServiceTest {
 
         RiderProfileResponse firstRiderProfile = new RiderProfileResponse(
                 firstRiderProfileId, UUID.randomUUID(), com.wafula.teza.rider.domain.VehicleType.MOTORCYCLE,
-                "PLATE1", true, com.wafula.teza.rider.domain.OnboardingStatus.APPROVED, Instant.now(), Instant.now()
+                "PLATE1", true, com.wafula.teza.rider.domain.OnboardingStatus.APPROVED, Instant.now(), Instant.now(), 0L
         );
         RiderProfileResponse secondRiderProfile = new RiderProfileResponse(
                 secondRiderProfileId, UUID.randomUUID(), com.wafula.teza.rider.domain.VehicleType.MOTORCYCLE,
-                "PLATE2", true, com.wafula.teza.rider.domain.OnboardingStatus.APPROVED, Instant.now(), Instant.now()
+                "PLATE2", true, com.wafula.teza.rider.domain.OnboardingStatus.APPROVED, Instant.now(), Instant.now(), 0L
         );
 
         when(riderService.getProfileByUserId(firstRiderProfile.userId())).thenReturn(firstRiderProfile);
@@ -620,7 +623,8 @@ class DeliveryServiceTest {
                 true,
                 com.wafula.teza.rider.domain.OnboardingStatus.APPROVED,
                 Instant.now(),
-                Instant.now()
+                Instant.now(),
+                0L
         );
 
         when(deliveryRepository.findById(deliveryId)).thenReturn(Optional.of(delivery));

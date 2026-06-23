@@ -16,4 +16,10 @@ public interface NotificationService {
     void markAllAsRead(UUID userId);
 
     Notification createNotification(UUID userId, String title, String message);
+
+    Notification createNotification(UUID userId, String title, String message, java.util.Map<String, String> extraData);
+
+    void registerDeviceToken(UUID userId, String token, String deviceId, String deviceType, String appVersion);
+
+    void unregisterDeviceToken(UUID userId, String token);
 }

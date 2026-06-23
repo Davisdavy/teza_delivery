@@ -113,7 +113,13 @@ public class NotificationEventListener {
     public void onDeliveryOfferCreated(DeliveryOfferCreatedEvent event) {
         String title = "New Delivery Offer Available";
         String message = "You have received a new delivery offer. You have " + event.durationSeconds() + " seconds to respond.";
-        notificationService.createNotification(event.riderUserId(), title, message);
+        
+        java.util.Map<String, String> extraData = new java.util.HashMap<>();
+        extraData.put("type", "OFFER");
+        extraData.put("offerId", event.offerId().toString());
+        extraData.put("deliveryId", event.deliveryId().toString());
+        
+        notificationService.createNotification(event.riderUserId(), title, message, extraData);
     }
 
     private UUID resolveOwnerUserId(DeliveryStatusChangedEvent event) {
