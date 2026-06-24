@@ -1,6 +1,9 @@
 spring:
   application:
     name: teza
+  config:
+    import:
+      - optional:classpath:application-local.yaml
 
   datasource:
     url: ${TEZA_DB_URL:jdbc:postgresql://localhost:5432/teza}
@@ -29,3 +32,6 @@ teza:
       enabled: ${TEZA_ADMIN_ENABLED:true}
       email: ${TEZA_ADMIN_EMAIL:admin@teza.local}
       password: ${TEZA_ADMIN_PASSWORD:}
+    google-maps:
+      api-key: ${GOOGLE_MAPS_API_KEY:}
+

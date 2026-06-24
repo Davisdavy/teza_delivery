@@ -29,6 +29,12 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestParam;
 import com.wafula.teza.shared.api.dto.PagedResponse;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.web.client.RestTemplate;
+
+
 
 /**
  * REST controller for managing deliveries, status updates, status history logs,
@@ -39,6 +45,9 @@ import com.wafula.teza.shared.api.dto.PagedResponse;
 public class DeliveryController {
 
     private final DeliveryService deliveryService;
+
+    @Value("${teza.google-maps.api-key}")
+    private String googleMapsApiKey;
 
     public DeliveryController(DeliveryService deliveryService) {
         this.deliveryService = deliveryService;
@@ -171,6 +180,39 @@ public class DeliveryController {
             Authentication authentication) {
         boolean isAdmin = hasAdminRole(authentication);
         return deliveryService.findMatchingRiders(id, currentUserId, isAdmin);
+    }
+
+    @GetMapping("/places/autocomplete")
+    public String getPlacesAutocomplete(@RequestParam("input") String input) {
+        try {
+            String encodedInput = URLEncoder.encode(input, StandardCharsets.UTF_8);
+            String url = "https://maps.googleapis.com/maps/api/place/autocomplete/json?"
+                    + "input=" + encodedInput
+                    + "&components=country:ke"
+                    + "&location=-1.286389,36.817223"
+                    + "&radius=40000"
+                    + "&strictbounds=true"
+                    + "&key=" + googleMapsApiKey;
+            RestTemplate restTemplate = new RestTemplate();
+            return restTemplate.getForObject(url, String.class);
+        } catch (Exception e) {
+            return "{\"predictions\":[],\"error\":\"" + e.getMessage() + "\"}";
+        }
+    }
+
+    @GetMapping("/places/details")
+    public String getPlaceDetails(@RequestParam("placeId") String placeId) {
+        try {
+            String encodedPlaceId = URLEncoder.encode(placeId, StandardCharsets.UTF_8);
+            String url = "https://maps.googleapis.com/maps/api/place/details/json?"
+                    + "place_id=" + encodedPlaceId
+                    + "&fields=geometry"
+                    + "&key=" + googleMapsApiKey;
+            RestTemplate restTemplate = new RestTemplate();
+            return restTemplate.getForObject(url, String.class);
+        } catch (Exception e) {
+            return "{\"result\":{},\"error\":\"" + e.getMessage() + "\"}";
+        }
     }
 
     private boolean hasAdminRole(Authentication authentication) {
