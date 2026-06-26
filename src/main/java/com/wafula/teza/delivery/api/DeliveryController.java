@@ -228,31 +228,6 @@ public class DeliveryController {
         }
     }
 
-    @GetMapping("/places/static-map")
-    public org.springframework.http.ResponseEntity<byte[]> getStaticMap(
-            @RequestParam("lat") double lat,
-            @RequestParam("lng") double lng,
-            @RequestParam("zoom") int zoom,
-            @RequestParam("width") int width,
-            @RequestParam("height") int height) {
-        try {
-            String url = "https://maps.googleapis.com/maps/api/staticmap?"
-                    + "center=" + lat + "," + lng
-                    + "&zoom=" + zoom
-                    + "&size=" + width + "x" + height
-                    + "&key=" + googleMapsApiKey;
-            RestTemplate restTemplate = new RestTemplate();
-            byte[] imageBytes = restTemplate.getForObject(url, byte[].class);
-            
-            org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
-            headers.setContentType(org.springframework.http.MediaType.IMAGE_PNG);
-            
-            return new org.springframework.http.ResponseEntity<>(imageBytes, headers, org.springframework.http.HttpStatus.OK);
-        } catch (Exception e) {
-            return new org.springframework.http.ResponseEntity<>(new byte[0], org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-
     private boolean hasAdminRole(Authentication authentication) {
         if (authentication == null) {
             return false;
