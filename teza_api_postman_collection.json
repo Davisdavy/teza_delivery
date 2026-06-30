@@ -991,6 +991,123 @@
 			]
 		},
 		{
+			"name": "5.1 Google Places & Geocoding",
+			"item": [
+				{
+					"name": "Places Autocomplete",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{authToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"url": {
+							"raw": "{{baseUrl}}/api/delivery/places/autocomplete?input=Westlands",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"delivery",
+								"places",
+								"autocomplete"
+							],
+							"query": [
+								{
+									"key": "input",
+									"value": "Westlands"
+								}
+							]
+						},
+						"description": "Retrieve Google Places autocomplete predictions for an address input."
+					},
+					"response": []
+				},
+				{
+					"name": "Places Details",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{authToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"url": {
+							"raw": "{{baseUrl}}/api/delivery/places/details?placeId=ChIJk54X_0EXLxgR_YlG3zTz_Uo",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"delivery",
+								"places",
+								"details"
+							],
+							"query": [
+								{
+									"key": "placeId",
+									"value": "ChIJk54X_0EXLxgR_YlG3zTz_Uo"
+								}
+							]
+						},
+						"description": "Retrieve details (geometry/coordinates) of a specific Google Place ID."
+					},
+					"response": []
+				},
+				{
+					"name": "Reverse Geocoding",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{authToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"url": {
+							"raw": "{{baseUrl}}/api/delivery/places/reverse-geocode?lat=-1.2921&lng=36.8219",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"delivery",
+								"places",
+								"reverse-geocode"
+							],
+							"query": [
+								{
+									"key": "lat",
+									"value": "-1.2921"
+								},
+								{
+									"key": "lng",
+									"value": "36.8219"
+								}
+							]
+						},
+						"description": "Retrieve formatted physical address name for a set of coordinates (latitude and longitude)."
+					},
+					"response": []
+				}
+			]
+		},
+		{
 			"name": "6. Offers & Matching",
 			"item": [
 				{
