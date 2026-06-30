@@ -11,6 +11,9 @@ import static org.mockito.Mockito.when;
 
 import com.wafula.teza.delivery.api.dto.DeliveryCreateRequest;
 import com.wafula.teza.delivery.api.dto.DeliveryResponse;
+import com.wafula.teza.pricing.application.PricingService;
+import com.wafula.teza.pricing.domain.PricingBreakdown;
+import com.wafula.teza.pricing.domain.Location;
 import com.wafula.teza.delivery.api.dto.DeliveryUpdateRequest;
 import com.wafula.teza.delivery.application.DeliveryService;
 import com.wafula.teza.delivery.application.DeliveryServiceImpl;
@@ -75,6 +78,9 @@ class DeliveryServiceTest {
     @Mock
     private RiderMatchingService riderMatchingService;
 
+    @Mock
+    private PricingService pricingService;
+
     private DeliveryService deliveryService;
 
     @BeforeEach
@@ -87,7 +93,8 @@ class DeliveryServiceTest {
                 riderService,
                 userAccountService,
                 eventPublisher,
-                riderMatchingService
+                riderMatchingService,
+                pricingService
         );
     }
 
@@ -98,11 +105,18 @@ class DeliveryServiceTest {
         
         DeliveryCreateRequest request = new DeliveryCreateRequest(
                 "Pickup 123", -1.2833, 36.8167,
-                "Dropoff 456", -1.2933, 36.8267,
-                BigDecimal.valueOf(150.00)
+                "Dropoff 456", -1.2933, 36.8267
         );
 
         when(userAccountService.findById(userId)).thenReturn(Optional.of(customerAccount));
+        when(pricingService.calculateFee(any(Location.class), any(Location.class)))
+                .thenReturn(new PricingBreakdown(
+                        BigDecimal.valueOf(50.00),
+                        BigDecimal.valueOf(60.00),
+                        BigDecimal.valueOf(40.00),
+                        BigDecimal.ONE,
+                        BigDecimal.valueOf(150.00)
+                ));
         
         Delivery savedDelivery = Delivery.builder()
                 .id(UUID.randomUUID())
@@ -115,7 +129,7 @@ class DeliveryServiceTest {
                 .dropoffLatitude(request.dropoffLatitude())
                 .dropoffLongitude(request.dropoffLongitude())
                 .status(DeliveryStatus.PENDING)
-                .deliveryFee(request.deliveryFee())
+                .deliveryFee(BigDecimal.valueOf(150.00))
                 .createdAt(Instant.now())
                 .updatedAt(Instant.now())
                 .build();
@@ -143,12 +157,19 @@ class DeliveryServiceTest {
 
         DeliveryCreateRequest request = new DeliveryCreateRequest(
                 "Pickup 123", -1.2833, 36.8167,
-                "Dropoff 456", -1.2933, 36.8267,
-                BigDecimal.valueOf(150.00)
+                "Dropoff 456", -1.2933, 36.8267
         );
 
         when(userAccountService.findById(userId)).thenReturn(Optional.of(merchantAccount));
         when(merchantService.getProfileByUserId(userId)).thenReturn(merchantResponse);
+        when(pricingService.calculateFee(any(Location.class), any(Location.class)))
+                .thenReturn(new PricingBreakdown(
+                        BigDecimal.valueOf(50.00),
+                        BigDecimal.valueOf(60.00),
+                        BigDecimal.valueOf(40.00),
+                        BigDecimal.ONE,
+                        BigDecimal.valueOf(150.00)
+                ));
         
         Delivery savedDelivery = Delivery.builder()
                 .id(UUID.randomUUID())
@@ -161,7 +182,7 @@ class DeliveryServiceTest {
                 .dropoffLatitude(request.dropoffLatitude())
                 .dropoffLongitude(request.dropoffLongitude())
                 .status(DeliveryStatus.PENDING)
-                .deliveryFee(request.deliveryFee())
+                .deliveryFee(BigDecimal.valueOf(150.00))
                 .createdAt(Instant.now())
                 .updatedAt(Instant.now())
                 .build();
@@ -184,8 +205,7 @@ class DeliveryServiceTest {
         
         DeliveryCreateRequest request = new DeliveryCreateRequest(
                 "Pickup 123", -1.2833, 36.8167,
-                "Dropoff 456", -1.2933, 36.8267,
-                BigDecimal.valueOf(150.00)
+                "Dropoff 456", -1.2933, 36.8267
         );
 
         when(userAccountService.findById(riderId)).thenReturn(Optional.of(riderAccount));
@@ -205,11 +225,18 @@ class DeliveryServiceTest {
 
         DeliveryCreateRequest request = new DeliveryCreateRequest(
                 "Pickup 123", -1.2833, 36.8167,
-                "Dropoff 456", -1.2933, 36.8267,
-                BigDecimal.valueOf(150.00)
+                "Dropoff 456", -1.2933, 36.8267
         );
 
         when(userAccountService.findById(adminId)).thenReturn(Optional.of(adminAccount));
+        when(pricingService.calculateFee(any(Location.class), any(Location.class)))
+                .thenReturn(new PricingBreakdown(
+                        BigDecimal.valueOf(50.00),
+                        BigDecimal.valueOf(60.00),
+                        BigDecimal.valueOf(40.00),
+                        BigDecimal.ONE,
+                        BigDecimal.valueOf(150.00)
+                ));
         when(deliveryRepository.save(any(Delivery.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         DeliveryResponse response = deliveryService.createDelivery(adminId, request);

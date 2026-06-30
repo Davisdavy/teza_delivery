@@ -3,6 +3,9 @@ package com.wafula.teza.delivery.application;
 import com.wafula.teza.delivery.api.dto.DeliveryCreateRequest;
 import com.wafula.teza.delivery.api.dto.DeliveryOfferResponse;
 import com.wafula.teza.delivery.api.dto.DeliveryResponse;
+import com.wafula.teza.pricing.application.PricingService;
+import com.wafula.teza.pricing.domain.Location;
+import com.wafula.teza.pricing.domain.PricingBreakdown;
 import com.wafula.teza.delivery.api.dto.DeliveryStatusHistoryResponse;
 import com.wafula.teza.delivery.api.dto.DeliveryStatusUpdateRequest;
 import com.wafula.teza.delivery.api.dto.DeliveryUpdateRequest;
@@ -60,6 +63,7 @@ public class DeliveryServiceImpl implements DeliveryService {
     private final UserAccountService userAccountService;
     private final ApplicationEventPublisher eventPublisher;
     private final RiderMatchingService riderMatchingService;
+    private final PricingService pricingService;
     private final Map<UUID, List<UUID>> matchingRidersCache = new ConcurrentHashMap<>();
 
     public DeliveryServiceImpl(
@@ -70,7 +74,8 @@ public class DeliveryServiceImpl implements DeliveryService {
             RiderService riderService,
             UserAccountService userAccountService,
             ApplicationEventPublisher eventPublisher,
-            RiderMatchingService riderMatchingService) {
+            RiderMatchingService riderMatchingService,
+            PricingService pricingService) {
         this.deliveryRepository = deliveryRepository;
         this.deliveryOfferRepository = deliveryOfferRepository;
         this.deliveryStatusHistoryRepository = deliveryStatusHistoryRepository;
@@ -79,6 +84,7 @@ public class DeliveryServiceImpl implements DeliveryService {
         this.userAccountService = userAccountService;
         this.eventPublisher = eventPublisher;
         this.riderMatchingService = riderMatchingService;
+        this.pricingService = pricingService;
     }
 
     @Override
@@ -99,6 +105,10 @@ public class DeliveryServiceImpl implements DeliveryService {
             throw new ApiException(HttpStatus.FORBIDDEN, "Only customers, merchants, and admins can place deliveries");
         }
 
+        Location pickup = new Location(request.pickupLatitude(), request.pickupLongitude());
+        Location dropoff = new Location(request.dropoffLatitude(), request.dropoffLongitude());
+        PricingBreakdown pricing = pricingService.calculateFee(pickup, dropoff);
+
         Delivery delivery = Delivery.builder()
                 .merchantId(merchantId)
                 .customerId(customerId)
@@ -109,7 +119,7 @@ public class DeliveryServiceImpl implements DeliveryService {
                 .dropoffLatitude(request.dropoffLatitude())
                 .dropoffLongitude(request.dropoffLongitude())
                 .status(DeliveryStatus.PENDING)
-                .deliveryFee(request.deliveryFee())
+                .deliveryFee(pricing.finalFee())
                 .build();
 
         Delivery saved = deliveryRepository.save(delivery);
