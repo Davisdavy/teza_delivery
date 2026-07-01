@@ -1384,6 +1384,8 @@
 							]
 						},
 						"description": "Mark all notifications read for the authenticated user."
+					},
+					"response": []
 				}
 			]
 		},
