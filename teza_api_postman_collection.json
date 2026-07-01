@@ -1384,6 +1384,96 @@
 							]
 						},
 						"description": "Mark all notifications read for the authenticated user."
+				}
+			]
+		},
+		{
+			"name": "8. Pricing Engine",
+			"item": [
+				{
+					"name": "Estimate Delivery Fee",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"pickupLatitude\": -1.2833,\n    \"pickupLongitude\": 36.8167,\n    \"dropoffLatitude\": -1.2933,\n    \"dropoffLongitude\": 36.8267\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/pricing/estimate",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"pricing",
+								"estimate"
+							]
+						},
+						"description": "Calculate estimated delivery fee between two coordinate points."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Pricing Configuration",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/pricing/config",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"pricing",
+								"config"
+							]
+						},
+						"description": "Fetch the current pricing model configuration parameters (Admin only)."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Pricing Configuration",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"baseFee\": 50.0,\n    \"pricePerKilometer\": 30.0,\n    \"pricePerMinute\": 2.0,\n    \"minimumDeliveryFee\": 100.0,\n    \"maximumDeliveryFee\": 1000.0,\n    \"surgeEnabled\": true,\n    \"peakHourMultiplier\": 1.50,\n    \"weekendMultiplier\": 1.20,\n    \"nightMultiplier\": 1.30\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/pricing/config",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"pricing",
+								"config"
+							]
+						},
+						"description": "Update pricing model parameters. Restricted to Super Admin."
 					},
 					"response": []
 				}
