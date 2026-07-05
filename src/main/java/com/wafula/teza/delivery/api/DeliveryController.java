@@ -29,9 +29,16 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestParam;
 import com.wafula.teza.shared.api.dto.PagedResponse;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
 
@@ -244,5 +251,96 @@ public class DeliveryController {
         }
         return authentication.getAuthorities().stream()
                 .anyMatch(grantedAuthority -> grantedAuthority.getAuthority().equals("ROLE_SUPER_ADMIN"));
+    }
+
+    @GetMapping("/export/csv")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'SUPPORT_ADMIN')")
+    public ResponseEntity<byte[]> exportDeliveriesToCsv() {
+        List<DeliveryResponse> deliveries = deliveryService.getAllDeliveries();
+        
+        StringBuilder csv = new StringBuilder();
+        csv.append("Delivery ID,Merchant ID,Customer ID,Rider ID,Status,Pickup Address,Dropoff Address,Delivery Fee (KES)\n");
+        
+        for (DeliveryResponse d : deliveries) {
+            csv.append(escapeCsvField(d.id().toString())).append(",")
+               .append(escapeCsvField(d.merchantId().toString())).append(",")
+               .append(escapeCsvField(d.customerId().toString())).append(",")
+               .append(d.riderId() != null ? escapeCsvField(d.riderId().toString()) : "").append(",")
+               .append(escapeCsvField(d.status().name())).append(",")
+               .append(escapeCsvField(d.pickupAddress())).append(",")
+               .append(escapeCsvField(d.dropoffAddress())).append(",")
+               .append(d.deliveryFee()).append("\n");
+        }
+        
+        byte[] data = csv.toString().getBytes(StandardCharsets.UTF_8);
+        
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(new MediaType("text", "csv", StandardCharsets.UTF_8));
+        headers.setContentDispositionFormData("attachment", "deliveries.csv");
+        
+        return new ResponseEntity<>(data, headers, HttpStatus.OK);
+    }
+    
+    private String escapeCsvField(String field) {
+        if (field == null) {
+            return "";
+        }
+        if (field.contains(",") || field.contains("\"") || field.contains("\n") || field.contains("\r")) {
+            return "\"" + field.replace("\"", "\"\"") + "\"";
+        }
+        return field;
+    }
+
+    @GetMapping("/export/excel")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'SUPPORT_ADMIN')")
+    public ResponseEntity<byte[]> exportDeliveriesToExcel() {
+        List<DeliveryResponse> deliveries = deliveryService.getAllDeliveries();
+        
+        try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            Sheet sheet = workbook.createSheet("Deliveries");
+            
+            CellStyle headerStyle = workbook.createCellStyle();
+            Font font = workbook.createFont();
+            font.setBold(true);
+            headerStyle.setFont(font);
+            
+            Row headerRow = sheet.createRow(0);
+            String[] headersList = { "Delivery ID", "Merchant ID", "Customer ID", "Rider ID", "Status", "Pickup Address", "Dropoff Address", "Delivery Fee (KES)" };
+            for (int i = 0; i < headersList.length; i++) {
+                Cell cell = headerRow.createCell(i);
+                cell.setCellValue(headersList[i]);
+                cell.setCellStyle(headerStyle);
+            }
+            
+            int rowIdx = 1;
+            for (DeliveryResponse d : deliveries) {
+                Row row = sheet.createRow(rowIdx++);
+                row.createCell(0).setCellValue(d.id().toString());
+                row.createCell(1).setCellValue(d.merchantId().toString());
+                row.createCell(2).setCellValue(d.customerId().toString());
+                row.createCell(3).setCellValue(d.riderId() != null ? d.riderId().toString() : "");
+                row.createCell(4).setCellValue(d.status().name());
+                row.createCell(5).setCellValue(d.pickupAddress());
+                row.createCell(6).setCellValue(d.dropoffAddress());
+                
+                Cell feeCell = row.createCell(7);
+                feeCell.setCellValue(d.deliveryFee() != null ? d.deliveryFee().doubleValue() : 0.0);
+            }
+            
+            for (int i = 0; i < headersList.length; i++) {
+                sheet.autoSizeColumn(i);
+            }
+            
+            workbook.write(out);
+            byte[] data = out.toByteArray();
+            
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
+            headers.setContentDispositionFormData("attachment", "deliveries.xlsx");
+            
+            return new ResponseEntity<>(data, headers, HttpStatus.OK);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to generate Excel file", e);
+        }
     }
 }
