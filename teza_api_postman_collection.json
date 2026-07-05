@@ -987,6 +987,66 @@
 						"description": "Retrieve status audit history logs with timestamps for a specific delivery."
 					},
 					"response": []
+				},
+				{
+					"name": "Export Deliveries to CSV (Admin Only)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{authToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"url": {
+							"raw": "{{baseUrl}}/api/delivery/export/csv",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"delivery",
+								"export",
+								"csv"
+							]
+						},
+						"description": "Export all deliveries as a CSV attachment. Restricted to Admin roles."
+					},
+					"response": []
+				},
+				{
+					"name": "Export Deliveries to Excel (Admin Only)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{authToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"url": {
+							"raw": "{{baseUrl}}/api/delivery/export/excel",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"delivery",
+								"export",
+								"excel"
+							]
+						},
+						"description": "Export all deliveries as an Excel (.xlsx) spreadsheet attachment. Restricted to Admin roles."
+					},
+					"response": []
 				}
 			]
 		},

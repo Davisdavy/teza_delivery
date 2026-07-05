@@ -262,9 +262,9 @@ public class DeliveryController {
         csv.append("Delivery ID,Merchant ID,Customer ID,Rider ID,Status,Pickup Address,Dropoff Address,Delivery Fee (KES)\n");
         
         for (DeliveryResponse d : deliveries) {
-            csv.append(escapeCsvField(d.id().toString())).append(",")
-               .append(escapeCsvField(d.merchantId().toString())).append(",")
-               .append(escapeCsvField(d.customerId().toString())).append(",")
+            csv.append(d.id() != null ? escapeCsvField(d.id().toString()) : "").append(",")
+               .append(d.merchantId() != null ? escapeCsvField(d.merchantId().toString()) : "").append(",")
+               .append(d.customerId() != null ? escapeCsvField(d.customerId().toString()) : "").append(",")
                .append(d.riderId() != null ? escapeCsvField(d.riderId().toString()) : "").append(",")
                .append(escapeCsvField(d.status().name())).append(",")
                .append(escapeCsvField(d.pickupAddress())).append(",")
@@ -315,9 +315,9 @@ public class DeliveryController {
             int rowIdx = 1;
             for (DeliveryResponse d : deliveries) {
                 Row row = sheet.createRow(rowIdx++);
-                row.createCell(0).setCellValue(d.id().toString());
-                row.createCell(1).setCellValue(d.merchantId().toString());
-                row.createCell(2).setCellValue(d.customerId().toString());
+                row.createCell(0).setCellValue(d.id() != null ? d.id().toString() : "");
+                row.createCell(1).setCellValue(d.merchantId() != null ? d.merchantId().toString() : "");
+                row.createCell(2).setCellValue(d.customerId() != null ? d.customerId().toString() : "");
                 row.createCell(3).setCellValue(d.riderId() != null ? d.riderId().toString() : "");
                 row.createCell(4).setCellValue(d.status().name());
                 row.createCell(5).setCellValue(d.pickupAddress());
