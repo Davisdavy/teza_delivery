@@ -1,6 +1,7 @@
 package com.wafula.teza.user.api;
 
 import com.wafula.teza.shared.exception.ApiException;
+import com.wafula.teza.user.api.dto.UserCreateRequest;
 import com.wafula.teza.user.api.dto.UserResponse;
 import com.wafula.teza.user.api.dto.UserUpdateRequest;
 import com.wafula.teza.user.api.dto.ChangePasswordRequest;
@@ -14,9 +15,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -32,9 +35,23 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserController {
 
     private final UserAccountService userAccountService;
+    private final PasswordEncoder passwordEncoder;
 
-    public UserController(UserAccountService userAccountService) {
+    public UserController(UserAccountService userAccountService, PasswordEncoder passwordEncoder) {
         this.userAccountService = userAccountService;
+        this.passwordEncoder = passwordEncoder;
+    }
+
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    public UserResponse createUser(@Valid @RequestBody UserCreateRequest request) {
+        UserAccount created = userAccountService.create(
+                request.email(),
+                passwordEncoder.encode(request.password()),
+                request.role()
+        );
+        return UserMapper.toResponse(created);
     }
 
     @GetMapping("/me")
