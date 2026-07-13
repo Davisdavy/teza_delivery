@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  teza-db:
+    image: postgres:16-alpine
+    container_name: teza-db
+    environment:
+      POSTGRES_DB: teza
+      POSTGRES_USER: teza
+      POSTGRES_PASSWORD: teza
+    ports:
+      - "5432:5432"
+    volumes:
+      - teza-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U teza -d teza"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  teza-backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: teza-backend
+    ports:
+      - "8080:8080"
+    environment:
+      - TEZA_DB_URL=jdbc:postgresql://teza-db:5432/teza
+      - TEZA_DB_USERNAME=teza
+      - TEZA_DB_PASSWORD=teza
+      - TEZA_JWT_SECRET=change-me-this-is-a-dev-only-secret-please-rotate
+      - TEZA_ADMIN_ENABLED=true
+      - TEZA_ADMIN_EMAIL=admin@teza.local
+      - TEZA_ADMIN_PASSWORD=adminpass
+    depends_on:
+      teza-db:
+        condition: service_healthy
+
+volumes:
+  teza-db-data:
