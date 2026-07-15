@@ -93,6 +93,9 @@ public class Delivery {
     @Column(name = "cancelled_at")
     private Instant cancelledAt;
 
+    @Column(name = "verification_otp", length = 6)
+    private String verificationOtp;
+
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;

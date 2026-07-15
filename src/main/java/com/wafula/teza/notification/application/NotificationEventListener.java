@@ -64,8 +64,26 @@ public class NotificationEventListener {
                 message = "Your package is now in transit from " + event.pickupAddress() + " to " + event.dropoffAddress() + ".";
             }
             case IN_TRANSIT -> {
-                title = "Delivery in Transit";
-                message = "Your package is on the way to " + event.dropoffAddress() + ".";
+                // Resolve merchant name for personalised OTP SMS
+                String merchantName = "the merchant";
+                if (event.merchantId() != null) {
+                    try {
+                        MerchantResponse merchant = merchantService.getProfileById(event.merchantId(), null, true);
+                        merchantName = merchant.businessName();
+                    } catch (Exception ex) {
+                        log.warn("Could not resolve merchant name for OTP SMS, delivery {}", event.deliveryId());
+                    }
+                }
+                String otp = event.verificationOtp() != null ? event.verificationOtp() : "------";
+                title = "Delivery Verification Code";
+                message = "Thank you for ordering from " + merchantName + ".\n\n"
+                        + "Your delivery is on the way.\n\n"
+                        + "Please provide this code to the rider upon arrival.\n\n"
+                        + "Verification Code:\n" + otp + "\n\n"
+                        + "This code confirms successful delivery.\n"
+                        + "Do not share it before receiving your order.\n\n"
+                        + "- Teza Logistics";
+                log.info("[OTP SMS] Delivery {} → Code {} → Customer {}", event.deliveryId(), otp, ownerUserId);
             }
             case DELIVERED -> {
                 title = "Delivered Successfully";
@@ -84,7 +102,7 @@ public class NotificationEventListener {
             notificationService.createNotification(ownerUserId, title, message);
         }
 
-        // Notify assigned rider on cancellation or assignment
+        // Notify assigned rider on relevant status changes
         if (event.riderId() != null) {
             try {
                 RiderProfileResponse rider = riderService.getProfileById(event.riderId(), null, true);
@@ -92,15 +110,21 @@ public class NotificationEventListener {
 
                 if (status == DeliveryStatus.CANCELLED) {
                     notificationService.createNotification(
-                            riderUserId, 
-                            "Delivery Cancelled", 
+                            riderUserId,
+                            "Delivery Cancelled",
                             "The delivery order you were assigned to has been cancelled."
                     );
                 } else if (status == DeliveryStatus.ASSIGNED) {
                     notificationService.createNotification(
-                            riderUserId, 
-                            "Delivery Assigned", 
+                            riderUserId,
+                            "Delivery Assigned",
                             "You have been successfully assigned to a delivery at " + event.pickupAddress() + "."
+                    );
+                } else if (status == DeliveryStatus.IN_TRANSIT) {
+                    notificationService.createNotification(
+                            riderUserId,
+                            "OTP Sent to Customer",
+                            "A verification code has been sent to the customer. Ask for it upon arrival."
                     );
                 }
             } catch (Exception ex) {
@@ -108,6 +132,7 @@ public class NotificationEventListener {
             }
         }
     }
+
 
     @EventListener
     public void onDeliveryOfferCreated(DeliveryOfferCreatedEvent event) {

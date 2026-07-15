@@ -154,7 +154,8 @@ class NotificationServiceTest {
                 null,
                 null,
                 "Pickup 1",
-                "Dropoff 1"
+                "Dropoff 1",
+                null
         );
 
         when(notificationRepository.save(any(Notification.class))).thenAnswer(inv -> inv.getArgument(0));
@@ -178,7 +179,8 @@ class NotificationServiceTest {
                 merchantId,
                 null,
                 "Pickup 1",
-                "Dropoff 1"
+                "Dropoff 1",
+                null
         );
 
         MerchantResponse merchantResponse = new MerchantResponse(
@@ -209,7 +211,8 @@ class NotificationServiceTest {
                 null,
                 riderId,
                 "Pickup 1",
-                "Dropoff 1"
+                "Dropoff 1",
+                null
         );
 
         RiderProfileResponse riderResponse = new RiderProfileResponse(
@@ -224,6 +227,53 @@ class NotificationServiceTest {
         // Should notify both the owner customer and the assigned rider (2 times)
         verify(notificationRepository, times(2)).save(any(Notification.class));
         verify(riderService).getProfileById(riderId, null, true);
+    }
+
+    @Test
+    void testOnInTransitGeneratesOtpSmsNotification() {
+        UUID customerId = UUID.randomUUID();
+        UUID merchantId = UUID.randomUUID();
+        UUID merchantUserId = UUID.randomUUID();
+        UUID riderId = UUID.randomUUID();
+        UUID riderUserId = UUID.randomUUID();
+        UUID deliveryId = UUID.randomUUID();
+        String otp = "483291";
+
+        DeliveryStatusChangedEvent event = new DeliveryStatusChangedEvent(
+                deliveryId,
+                DeliveryStatus.PICKED_UP,
+                DeliveryStatus.IN_TRANSIT,
+                customerId,
+                merchantId,
+                riderId,
+                "Pickup 1",
+                "Dropoff 1",
+                otp
+        );
+
+        MerchantResponse merchantResponse = new MerchantResponse(
+                merchantId, merchantUserId, "Test Merchant", "0700000000", "Nairobi", Instant.now(), Instant.now()
+        );
+
+        RiderProfileResponse riderResponse = new RiderProfileResponse(
+                riderId, riderUserId, null, null, true, null, Instant.now(), Instant.now(), 0L
+        );
+
+        when(merchantService.getProfileById(merchantId, null, true)).thenReturn(merchantResponse);
+        when(riderService.getProfileById(riderId, null, true)).thenReturn(riderResponse);
+        when(notificationRepository.save(any(Notification.class))).thenAnswer(inv -> {
+            Notification saved = inv.getArgument(0);
+            // Verify OTP is embedded in the notification message
+            if (saved.getUserId().equals(customerId)) {
+                assert saved.getMessage().contains(otp) : "OTP not found in notification message";
+            }
+            return saved;
+        });
+
+        eventListener.onDeliveryStatusChanged(event);
+
+        // customer gets OTP SMS + rider gets "OTP Sent" push = 2 saves
+        verify(notificationRepository, times(2)).save(any(Notification.class));
     }
 
     @Test
