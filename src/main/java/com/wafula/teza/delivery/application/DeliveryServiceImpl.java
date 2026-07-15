@@ -133,7 +133,8 @@ public class DeliveryServiceImpl implements DeliveryService {
                 saved.getMerchantId(),
                 saved.getRiderId(),
                 saved.getPickupAddress(),
-                saved.getDropoffAddress()
+                saved.getDropoffAddress(),
+                null
         ));
 
         return DeliveryMapper.toResponse(saved);
@@ -271,6 +272,14 @@ public class DeliveryServiceImpl implements DeliveryService {
             // Admin can override
         } else {
             validateTransition(delivery, oldStatus, newStatus, currentUserId);
+            if (newStatus == DeliveryStatus.DELIVERED) {
+                if (delivery.getVerificationOtp() == null) {
+                    throw new ApiException(HttpStatus.INTERNAL_SERVER_ERROR, "No verification OTP was generated for this delivery");
+                }
+                if (request.otp() == null || !request.otp().trim().equals(delivery.getVerificationOtp())) {
+                    throw new ApiException(HttpStatus.BAD_REQUEST, "Invalid verification code");
+                }
+            }
         }
 
         updateDeliveryStatusAndTimestamps(delivery, newStatus);
@@ -551,6 +560,9 @@ public class DeliveryServiceImpl implements DeliveryService {
             }
         } else if (newStatus == DeliveryStatus.PICKED_UP) {
             delivery.setPickedUpAt(now);
+        } else if (newStatus == DeliveryStatus.IN_TRANSIT) {
+            String otp = String.valueOf(100000 + new java.util.Random().nextInt(900000));
+            delivery.setVerificationOtp(otp);
         } else if (newStatus == DeliveryStatus.DELIVERED) {
             delivery.setDeliveredAt(now);
             if (delivery.getRiderId() != null) {
@@ -577,7 +589,8 @@ public class DeliveryServiceImpl implements DeliveryService {
                 delivery.getMerchantId(),
                 delivery.getRiderId(),
                 delivery.getPickupAddress(),
-                delivery.getDropoffAddress()
+                delivery.getDropoffAddress(),
+                delivery.getVerificationOtp()
         ));
     }
 

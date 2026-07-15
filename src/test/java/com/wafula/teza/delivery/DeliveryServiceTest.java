@@ -393,7 +393,7 @@ class DeliveryServiceTest {
                 .build();
 
         com.wafula.teza.delivery.api.dto.DeliveryStatusUpdateRequest request = 
-                new com.wafula.teza.delivery.api.dto.DeliveryStatusUpdateRequest(DeliveryStatus.CANCELLED, "Customer cancelled");
+                new com.wafula.teza.delivery.api.dto.DeliveryStatusUpdateRequest(DeliveryStatus.CANCELLED, "Customer cancelled", null);
 
         when(deliveryRepository.findById(deliveryId)).thenReturn(Optional.of(delivery));
         UserAccount ownerAccount = new UserAccount(ownerId, "customer@test.com", "hash", Role.CUSTOMER, true);
@@ -545,7 +545,7 @@ class DeliveryServiceTest {
         when(riderMatchingService.match(deliveryRequest, List.of(candidate))).thenReturn(List.of(rankedRider));
 
         com.wafula.teza.delivery.api.dto.DeliveryStatusUpdateRequest request = 
-                new com.wafula.teza.delivery.api.dto.DeliveryStatusUpdateRequest(DeliveryStatus.SEARCHING, "Start search");
+                new com.wafula.teza.delivery.api.dto.DeliveryStatusUpdateRequest(DeliveryStatus.SEARCHING, "Start search", null);
 
         deliveryService.updateDeliveryStatus(deliveryId, customerId, true, request);
 
@@ -637,10 +637,11 @@ class DeliveryServiceTest {
                 .dropoffAddress("B")
                 .status(DeliveryStatus.IN_TRANSIT)
                 .deliveryFee(BigDecimal.TEN)
+                .verificationOtp("123456")
                 .build();
 
         com.wafula.teza.delivery.api.dto.DeliveryStatusUpdateRequest request =
-                new com.wafula.teza.delivery.api.dto.DeliveryStatusUpdateRequest(DeliveryStatus.DELIVERED, "Delivered successfully");
+                new com.wafula.teza.delivery.api.dto.DeliveryStatusUpdateRequest(DeliveryStatus.DELIVERED, "Delivered successfully", "123456");
 
         RiderProfileResponse riderProfile = new RiderProfileResponse(
                 riderId,

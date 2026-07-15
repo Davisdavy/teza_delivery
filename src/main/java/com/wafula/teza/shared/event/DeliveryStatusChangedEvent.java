@@ -14,6 +14,7 @@ public record DeliveryStatusChangedEvent(
         UUID merchantId,
         UUID riderId,
         String pickupAddress,
-        String dropoffAddress
+        String dropoffAddress,
+        String verificationOtp
 ) {
 }

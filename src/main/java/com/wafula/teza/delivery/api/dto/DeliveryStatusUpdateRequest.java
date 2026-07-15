@@ -9,6 +9,8 @@ public record DeliveryStatusUpdateRequest(
         DeliveryStatus status,
 
         @Size(max = 255, message = "Reason cannot exceed 255 characters")
-        String reason
+        String reason,
+
+        String otp
 ) {
 }
