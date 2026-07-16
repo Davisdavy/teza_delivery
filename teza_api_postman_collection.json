@@ -744,6 +744,79 @@
 						"description": "Publish rider's coordinates for distance dispatch matching."
 					},
 					"response": []
+				},
+				{
+					"name": "Get Rider Profile by ID",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{authToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"url": {
+							"raw": "{{baseUrl}}/api/rider/profile/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"rider",
+								"profile",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": ""
+								}
+							]
+						},
+						"description": "Fetch rider profile by their profile ID (accessible by Admin and assigned Merchant)."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Rider Location by Profile ID",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{authToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"url": {
+							"raw": "{{baseUrl}}/api/rider/profile/:id/location",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"rider",
+								"profile",
+								":id",
+								"location"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": ""
+								}
+							]
+						},
+						"description": "Fetch the real-time location of the rider using their profile ID (accessible by Admin and assigned Merchant)."
+					},
+					"response": []
 				}
 			]
 		},
