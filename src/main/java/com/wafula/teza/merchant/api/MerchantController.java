@@ -70,6 +70,14 @@ public class MerchantController {
         return merchantService.updateProfile(currentUserId, request);
     }
 
+    @PutMapping("/profile/user/{userId}")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'SUPPORT_ADMIN')")
+    public MerchantResponse updateProfileForUser(
+            @PathVariable UUID userId,
+            @Valid @RequestBody MerchantUpdateRequest request) {
+        return merchantService.updateProfile(userId, request);
+    }
+
     @DeleteMapping("/profile/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteProfile(
