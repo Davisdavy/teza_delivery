@@ -10,6 +10,7 @@ import com.wafula.teza.rider.domain.RiderLocation;
 import com.wafula.teza.rider.domain.RiderLocationRepository;
 import com.wafula.teza.rider.domain.RiderProfile;
 import com.wafula.teza.rider.domain.RiderProfileRepository;
+import com.wafula.teza.rider.domain.VehicleType;
 import com.wafula.teza.shared.domain.Role;
 import com.wafula.teza.shared.exception.ApiException;
 import com.wafula.teza.user.application.UserAccount;
@@ -71,10 +72,24 @@ public class RiderServiceImpl implements RiderService {
     }
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
     public RiderProfileResponse getProfileByUserId(UUID userId) {
         RiderProfile profile = riderProfileRepository.findByUserId(userId)
-                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Rider profile not found"));
+                .orElseGet(() -> {
+                    UserAccount user = userAccountService.findById(userId).orElse(null);
+                    if (user != null && user.role() == Role.RIDER) {
+                        log.warn("Self-healing: Auto-initializing missing Rider profile for user {}", userId);
+                        RiderProfile newProfile = RiderProfile.builder()
+                                .userId(userId)
+                                .vehicleType(VehicleType.MOTORCYCLE)
+                                .vehiclePlateNum("PENDING")
+                                .onboardingStatus(OnboardingStatus.PENDING)
+                                .available(false)
+                                .build();
+                        return riderProfileRepository.save(newProfile);
+                    }
+                    throw new ApiException(HttpStatus.NOT_FOUND, "Rider profile not found");
+                });
         long deliveriesCount = deliveryRepository.countByRiderIdAndStatus(profile.getId(), DeliveryStatus.DELIVERED);
         return RiderMapper.toProfileResponse(profile, deliveriesCount);
     }
@@ -86,7 +101,10 @@ public class RiderServiceImpl implements RiderService {
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Rider profile not found"));
 
         if (!isAdmin && !profile.getUserId().equals(currentUserId)) {
-            throw new ApiException(HttpStatus.FORBIDDEN, "Access denied: you do not own this profile");
+            UserAccount user = userAccountService.findById(currentUserId).orElse(null);
+            if (user == null || user.role() != Role.MERCHANT) {
+                throw new ApiException(HttpStatus.FORBIDDEN, "Access denied: you do not own this profile");
+            }
         }
 
         long deliveriesCount = deliveryRepository.countByRiderIdAndStatus(profile.getId(), DeliveryStatus.DELIVERED);
@@ -195,8 +213,29 @@ public class RiderServiceImpl implements RiderService {
     }
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
     public List<RiderProfileResponse> getAllProfiles() {
+        try {
+            List<UserAccount> riderUsers = userAccountService.findAll().stream()
+                    .filter(u -> u.role() == Role.RIDER)
+                    .toList();
+            for (UserAccount user : riderUsers) {
+                if (!riderProfileRepository.existsByUserId(user.id())) {
+                    log.warn("Self-healing: Auto-initializing missing Rider profile for user {} during bulk listing", user.id());
+                    RiderProfile newProfile = RiderProfile.builder()
+                            .userId(user.id())
+                            .vehicleType(VehicleType.MOTORCYCLE)
+                            .vehiclePlateNum("PENDING")
+                            .onboardingStatus(OnboardingStatus.PENDING)
+                            .available(false)
+                            .build();
+                    riderProfileRepository.save(newProfile);
+                }
+            }
+        } catch (Exception e) {
+            log.error("Failed to perform self-healing for riders: {}", e.getMessage());
+        }
+
         return riderProfileRepository.findAll().stream()
                 .map(profile -> {
                     long deliveriesCount = deliveryRepository.countByRiderIdAndStatus(profile.getId(), DeliveryStatus.DELIVERED);

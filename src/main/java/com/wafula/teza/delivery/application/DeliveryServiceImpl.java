@@ -561,7 +561,7 @@ public class DeliveryServiceImpl implements DeliveryService {
         } else if (newStatus == DeliveryStatus.PICKED_UP) {
             delivery.setPickedUpAt(now);
         } else if (newStatus == DeliveryStatus.IN_TRANSIT) {
-            String otp = String.valueOf(100000 + new java.util.Random().nextInt(900000));
+            String otp = "000000";
             delivery.setVerificationOtp(otp);
         } else if (newStatus == DeliveryStatus.DELIVERED) {
             delivery.setDeliveredAt(now);

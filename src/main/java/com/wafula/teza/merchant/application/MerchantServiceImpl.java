@@ -18,6 +18,8 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class MerchantServiceImpl implements MerchantService {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(MerchantServiceImpl.class);
+
     private final MerchantRepository merchantRepository;
     private final UserAccountService userAccountService;
 
@@ -52,10 +54,23 @@ public class MerchantServiceImpl implements MerchantService {
     }
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
     public MerchantResponse getProfileByUserId(UUID userId) {
         Merchant merchant = merchantRepository.findByUserId(userId)
-                .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Merchant profile not found"));
+                .orElseGet(() -> {
+                    UserAccount user = userAccountService.findById(userId).orElse(null);
+                    if (user != null && user.role() == Role.MERCHANT) {
+                        log.warn("Self-healing: Auto-initializing missing Merchant profile for user {}", userId);
+                        Merchant newMerchant = Merchant.builder()
+                                .userId(userId)
+                                .businessName("Business Name Pending")
+                                .phoneNumber("0000000000")
+                                .address("Address Pending")
+                                .build();
+                        return merchantRepository.save(newMerchant);
+                    }
+                    throw new ApiException(HttpStatus.NOT_FOUND, "Merchant profile not found");
+                });
         return MerchantMapper.toResponse(merchant);
     }
 
@@ -106,8 +121,28 @@ public class MerchantServiceImpl implements MerchantService {
     }
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
     public List<MerchantResponse> getAllProfiles() {
+        try {
+            List<UserAccount> merchantUsers = userAccountService.findAll().stream()
+                    .filter(u -> u.role() == Role.MERCHANT)
+                    .toList();
+            for (UserAccount user : merchantUsers) {
+                if (!merchantRepository.existsByUserId(user.id())) {
+                    log.warn("Self-healing: Auto-initializing missing Merchant profile for user {} during bulk listing", user.id());
+                    Merchant newMerchant = Merchant.builder()
+                            .userId(user.id())
+                            .businessName("Business Name Pending")
+                            .phoneNumber("0000000000")
+                            .address("Address Pending")
+                            .build();
+                    merchantRepository.save(newMerchant);
+                }
+            }
+        } catch (Exception e) {
+            log.error("Failed to perform self-healing for merchants: {}", e.getMessage());
+        }
+
         return merchantRepository.findAll().stream()
                 .map(MerchantMapper::toResponse)
                 .toList();

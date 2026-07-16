@@ -50,6 +50,9 @@ public class UserAccountServiceImpl implements UserAccountService {
                 .enabled(true)
                 .build();
         User saved = userRepository.save(user);
+        
+        eventPublisher.publishEvent(new UserRoleChangedEvent(saved.getId(), null, role));
+        
         return toAccount(saved);
     }
 

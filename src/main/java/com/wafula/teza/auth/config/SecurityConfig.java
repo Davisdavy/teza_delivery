@@ -57,7 +57,7 @@ public class SecurityConfig {
                         // Representative role rules; modules add finer-grained @PreAuthorize later.
                         .requestMatchers("/api/admin/**").hasAnyRole("SUPER_ADMIN", "SUPPORT_ADMIN")
                         .requestMatchers("/api/merchant/**").hasAnyRole("MERCHANT", "SUPER_ADMIN", "SUPPORT_ADMIN")
-                        .requestMatchers("/api/rider/**").hasAnyRole("RIDER", "SUPER_ADMIN", "SUPPORT_ADMIN")
+                        .requestMatchers("/api/rider/**").hasAnyRole("RIDER", "MERCHANT", "SUPER_ADMIN", "SUPPORT_ADMIN")
                         .requestMatchers("/api/pricing/**").authenticated()
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
