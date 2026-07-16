@@ -101,7 +101,10 @@ public class RiderServiceImpl implements RiderService {
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Rider profile not found"));
 
         if (!isAdmin && !profile.getUserId().equals(currentUserId)) {
-            throw new ApiException(HttpStatus.FORBIDDEN, "Access denied: you do not own this profile");
+            UserAccount user = userAccountService.findById(currentUserId).orElse(null);
+            if (user == null || user.role() != Role.MERCHANT) {
+                throw new ApiException(HttpStatus.FORBIDDEN, "Access denied: you do not own this profile");
+            }
         }
 
         long deliveriesCount = deliveryRepository.countByRiderIdAndStatus(profile.getId(), DeliveryStatus.DELIVERED);

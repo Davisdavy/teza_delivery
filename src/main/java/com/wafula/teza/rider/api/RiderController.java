@@ -104,6 +104,11 @@ public class RiderController {
         return riderService.getLocation(currentUserId);
     }
 
+    @GetMapping("/profile/{id}/location")
+    public RiderLocationResponse getLocationByProfileId(@PathVariable UUID id) {
+        return riderService.getLocationByProfileId(id);
+    }
+
     private boolean hasAdminRole(Authentication authentication) {
         if (authentication == null) {
             return false;
